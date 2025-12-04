@@ -1,0 +1,154 @@
+{% extends "teacher/teacher_base.html" %}
+{% block title %}My Courses - {{ username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+    .page-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .course-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .course-table th {
+        background-color: #f8f9fa;
+        padding: 14px 16px;
+        text-align: center;
+        font-weight: 600;
+        color: #2c3e50;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .course-table td {
+        padding: 14px 16px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        color: #424242;
+    }
+
+    .course-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .course-table tbody tr:hover {
+        background-color: #f5f4fb;
+    }
+
+    .course-table a {
+        color: #7b1fa2;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .course-table a:hover {
+        text-decoration: underline;
+        color: #4a148c;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 32px 24px;
+        color: #757575;
+        background: #fafafa;
+        border-radius: 12px;
+        margin: 24px 0;
+        border: 1px dashed #e0e0e0;
+        font-size: 16px;
+    }
+
+    .empty-state i.material-icons {
+        font-size: 48px;
+        color: #bdbdbd;
+        margin-bottom: 12px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 24px;
+        color: #7b1fa2;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .back-link:hover {
+        color: #4a148c;
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <i class="material-icons">book</i>
+    <h2>My Courses - {{ username }}</h2>
+</div>
+
+{% if courses %}
+<table class="course-table">
+    <thead>
+        <tr>
+            <th>Course Name</th>
+            <th>Course ID</th>
+            <th>Credits</th>
+            <th>Semester</th>
+            <th>Classroom</th>
+            <th>Time</th>
+            <th>Capacity</th>
+            <th>Enrolled</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for course in courses %}
+        <tr>
+            <td>{{ course.course_name }}</td>
+            <td>{{ course.course_id }}</td>
+            <td>{{ course.credits }}</td>
+            <td>{{ course.semester_name }}</td>
+            <td>{{ course.classroom or '—' }}</td>
+            <td>{{ course.time_slot or '—' }}</td>
+            <td>{{ course.capacity }}</td>
+            <td>{{ course.student_count }} / {{ course.capacity }}</td>
+            <td>
+                <a href="{{ url_for('teacher.course_detail', offered_id=course.offered_id) }}">
+                    <i class="material-icons" style="font-size:16px;">visibility</i>
+                    View Details
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <i class="material-icons">event_busy</i>
+    <div>No teaching assignments scheduled.</div>
+</div>
+{% endif %}
+
+<a href="{{ url_for('main.dashboard') }}" class="back-link">
+    <i class="material-icons" style="font-size:18px;">arrow_back</i>
+    Back to Dashboard
+</a>
+{% endblock %}

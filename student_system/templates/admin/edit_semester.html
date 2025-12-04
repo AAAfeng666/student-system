@@ -1,0 +1,274 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}{% if semester %}Edit Semester{% else %}Add Semester{% endif %} - Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>
+    <i class="material-icons">{% if semester %}edit_calendar{% else %}add_task{% endif %}</i>
+    {% if semester %}
+      📝 Edit Semester: {{ semester.semester_name }}
+    {% else %}
+      ➕ Add New Semester
+    {% endif %}
+  </h2>
+  <a href="{{ url_for('admin.manage_semesters') }}" class="btn btn-outline">
+    <i class="material-icons">arrow_back</i> Back to Semester List
+  </a>
+</div>
+
+<div class="form-container">
+  <form method="POST" class="form-card">
+    {% if semester %}
+      <!-- 编辑模式：ID 只读 -->
+      <div class="form-group">
+        <label class="form-label">
+          <i class="material-icons">badge</i> Semester ID
+        </label>
+        <input type="text" value="{{ semester.semester_id }}" disabled class="form-input-disabled">
+        <input type="hidden" name="semester_id" value="{{ semester.semester_id }}">
+      </div>
+    {% else %}
+      <!-- 新增模式：ID 可输入（必填） -->
+      <div class="form-group required">
+        <label class="form-label">
+          <i class="material-icons">badge</i> Semester ID
+          <span class="help-text">Cannot be changed after creation</span>
+        </label>
+        <input type="text" name="semester_id" value="{{ request.form.semester_id or '' }}" class="form-input" required>
+      </div>
+    {% endif %}
+
+    <div class="form-group required">
+      <label class="form-label">
+        <i class="material-icons">title</i> Semester Name
+      </label>
+      <input type="text" name="semester_name" value="{{
+        semester.semester_name if semester else request.form.semester_name or ''
+      }}" class="form-input" required>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <i class="material-icons">access_time</i> Course Selection Start Time
+      </label>
+      <input type="datetime-local" name="selection_start"
+             value="{{
+               (semester.selection_start.strftime('%Y-%m-%dT%H:%M') if semester and semester.selection_start else '')
+               or (request.form.selection_start or '')
+             }}" class="form-input">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <i class="material-icons">hourglass_bottom</i> Course Selection End Time
+      </label>
+      <input type="datetime-local" name="selection_end"
+             value="{{
+               (semester.selection_end.strftime('%Y-%m-%dT%H:%M') if semester and semester.selection_end else '')
+               or (request.form.selection_end or '')
+             }}" class="form-input">
+    </div>
+
+    <div class="form-group checkbox-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="is_current" value="1"
+               {% if (semester and semester.is_current) or request.form.get('is_current') %}checked{% endif %}>
+        <span class="checkmark"></span>
+        <span class="checkbox-text">
+          <i class="material-icons">star</i> Set as Current Semester
+          <span class="help-text">The system will automatically unset the "current" status of other semesters</span>
+        </span>
+      </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      <i class="material-icons">{% if semester %}save{% else %}add{% endif %}</i>
+      {% if semester %}Save Changes{% else %}Create Semester{% endif %}
+    </button>
+  </form>
+</div>
+
+<style>
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.page-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 26px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-header h2 .material-icons {
+  color: #4caf50;
+  font-size: 28px;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: white;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-outline:hover {
+  background-color: #e3f2fd;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.form-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.form-card {
+  width: 100%;
+  max-width: 720px;
+  background: white;
+  padding: 36px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #eee;
+  font-size: 16px;
+}
+
+.form-group {
+  margin-bottom: 28px;
+}
+.form-group.required .form-label::after {
+  content: " *";
+  color: #e53935;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+.form-label .material-icons {
+  font-size: 22px;
+  color: #555;
+}
+.help-text {
+  font-size: 13px;
+  color: #777;
+  margin-left: 8px;
+}
+
+.form-input,
+.form-input-disabled {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  height: 52px;
+  box-sizing: border-box;
+}
+.form-input:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.18);
+}
+.form-input-disabled {
+  background: #f9f9f9;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* 自定义复选框 */
+.checkbox-group {
+  margin-top: 12px;
+}
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  user-select: none;
+}
+.checkbox-label input[type="checkbox"] {
+  display: none;
+}
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  margin-right: 10px;
+  position: relative;
+  top: 2px;
+  flex-shrink: 0;
+}
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+  background-color: #4caf50;
+  border-color: #4caf50;
+}
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  top: -2px;
+  left: 3px;
+}
+.checkbox-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2c3e50;
+  font-weight: 500;
+}
+.checkbox-text .material-icons {
+  color: #ff9800;
+  font-size: 20px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin-top: 8px;
+}
+.btn-primary:hover {
+  background-color: #43a047;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.35);
+}
+
+.material-icons {
+  font-size: 22px;
+  vertical-align: middle;
+  line-height: 1;
+}
+</style>
+{% endblock %}

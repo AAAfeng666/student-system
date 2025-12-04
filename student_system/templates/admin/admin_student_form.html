@@ -1,0 +1,240 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}{% if is_edit %}Edit Student{% else %}Add Student{% endif %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>
+    <i class="material-icons">{% if is_edit %}edit{% else %}person_add{% endif %}</i>
+    {% if is_edit %}Edit Student{% else %}Add Student{% endif %}
+  </h2>
+  <a href="{{ url_for('admin.students') }}" class="btn btn-outline">
+    <i class="material-icons">arrow_back</i> Back to Student List
+  </a>
+</div>
+
+<div class="form-container">
+  <form method="POST" class="form-card">
+    {% if is_edit %}
+      <div class="form-group">
+        <label class="form-label">
+          <i class="material-icons">badge</i> Student ID
+        </label>
+        <input type="text" value="{{ form.student_id }}" disabled class="form-input-disabled">
+        <input type="hidden" name="student_id" value="{{ form.student_id }}">
+      </div>
+    {% else %}
+      <div class="form-group required">
+        <label class="form-label">
+          <i class="material-icons">badge</i> Student ID
+        </label>
+        <input type="text" name="student_id" value="{{ form.student_id or '' }}" class="form-input" required>
+      </div>
+    {% endif %}
+
+    <div class="form-group required">
+      <label class="form-label">
+        <i class="material-icons">person</i> Full Name
+      </label>
+      <input type="text" name="name" value="{{ form.name or '' }}" class="form-input" required>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <i class="material-icons">wc</i> Gender
+      </label>
+      <select name="gender" class="form-select">
+        <option value="">-- Please Select --</option>
+        <option value="M" {% if form.gender == 'M' %}selected{% endif %}>Male</option>
+        <option value="F" {% if form.gender == 'F' %}selected{% endif %}>Female</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <i class="material-icons">cake</i> Date of Birth
+      </label>
+      <input type="date" name="birth_date" value="{{ form.birth_date or '' }}" class="form-input">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <i class="material-icons">phone</i> Phone Number
+      </label>
+      <input type="text" name="phone" value="{{ form.phone or '' }}" class="form-input">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">
+        <i class="material-icons">location_on</i> Hometown
+      </label>
+      <input type="text" name="hometown" value="{{ form.hometown or '' }}" class="form-input">
+    </div>
+
+    <div class="form-group required">
+      <label class="form-label">
+        <i class="material-icons">school</i> College
+      </label>
+      <select name="college_id" class="form-select" required>
+        <option value="">-- Please Select a College --</option>
+        {% for col in colleges %}
+          <option value="{{ col.college_id }}" {% if col.college_id == (form.college_id or '') %}selected{% endif %}>
+            {{ col.college_id }} - {{ col.college_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      <i class="material-icons">{% if is_edit %}save{% else %}add{% endif %}</i>
+      {% if is_edit %}Update Student{% else %}Add Student{% endif %}
+    </button>
+  </form>
+</div>
+
+<style>
+/* ========== Page Header ========== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.page-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 28px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-header h2 .material-icons {
+  color: #4caf50;
+  font-size: 28px;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: white;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-outline:hover {
+  background-color: #e3f2fd;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* ========== Centered Container ========== */
+.form-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 20px 0;
+}
+
+/* ========== Form Card ========== */
+.form-card {
+  width: 100%;
+  max-width: 720px;
+  background: white;
+  padding: 36px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid #eee;
+  font-size: 16px;
+}
+
+.form-group {
+  margin-bottom: 28px;
+}
+.form-group.required .form-label::after {
+  content: " *";
+  color: #e53935;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+.form-label .material-icons {
+  font-size: 22px;
+  color: #555;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  height: 52px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  box-sizing: border-box;
+}
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.18);
+}
+
+.form-input-disabled {
+  width: 100%;
+  padding: 14px 16px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  color: #666;
+  font-size: 16px;
+  height: 52px;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin-top: 8px;
+}
+.btn-primary:hover {
+  background-color: #43a047;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.35);
+}
+.btn-primary .material-icons {
+  font-size: 22px;
+}
+
+.material-icons {
+  font-size: 22px;
+  vertical-align: middle;
+  line-height: 1;
+}
+</style>
+{% endblock %}

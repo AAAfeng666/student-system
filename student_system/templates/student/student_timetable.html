@@ -1,0 +1,198 @@
+{% extends "student/student_base.html" %}
+{% block title %}My Class Schedule{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<style>
+.timetable-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.timetable-header {
+    background: linear-gradient(135deg, rgba(123, 31, 162, 0.95), rgba(199, 10, 131, 0.75));
+    padding: 20px 0;
+    text-align: center;
+    color: white;
+}
+.timetable-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.timetable-header .material-icons {
+    font-size: 24px;
+    vertical-align: middle;
+}
+
+.timetable-grid {
+    display: grid;
+    grid-template-columns: 90px repeat(5, 1fr);
+    grid-template-rows: auto repeat(10, minmax(60px, auto));
+    gap: 1px;
+    background: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.timetable-grid > div {
+    background: white;
+    padding: 8px;
+    font-size: 14px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.time-label {
+    background: rgba(245, 245, 245, 0.85);
+    font-weight: 600;
+    color: #333;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 14px;
+}
+.time-label small {
+    font-weight: normal;
+    color: #666;
+    font-size: 11px;
+    line-height: 1.3;
+}
+
+.course-cell {
+    background: rgba(255, 249, 196, 0.9) !important;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 213, 79, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(255, 213, 79, 0.2);
+}
+
+.course-name {
+    font-weight: bold;
+    color: #2e7d32;
+    font-size: 13px;
+    word-break: break-word;
+}
+.course-detail {
+    color: #555;
+    margin-top: 4px;
+    line-height: 1.3;
+    font-size: 12px;
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    .timetable-container {
+        margin: 12px;
+        border-radius: 12px;
+    }
+    .timetable-header h2 {
+        font-size: 18px;
+    }
+    .timetable-grid {
+        grid-template-columns: 70px repeat(5, 1fr);
+        grid-template-rows: auto repeat(10, minmax(50px, auto));
+    }
+    .timetable-grid > div {
+        min-height: 50px;
+        padding: 6px;
+        font-size: 12px;
+    }
+    .time-label {
+        font-size: 12px;
+    }
+    .time-label small {
+        font-size: 10px;
+    }
+    .course-cell {
+        padding: 6px;
+        border-radius: 4px;
+    }
+    .course-name {
+        font-size: 12px;
+    }
+    .course-detail {
+        font-size: 11px;
+    }
+}
+</style>
+
+<div class="timetable-container">
+    <div class="timetable-header">
+        <h2>
+            <span class="material-icons">calendar_today</span>
+            My Class Schedule ({{ current_semester_name }})
+        </h2>
+    </div>
+
+    <div class="timetable-grid">
+        <!-- First row: header -->
+        <div class="time-label" style="grid-column: 1; grid-row: 1;">Period<br><small>Time</small></div>
+
+        {% for day in range(1, 6) %}
+            <div class="time-label" style="grid-column: {{ day + 1 }}; grid-row: 1;">
+                {{ weekdays[day] }}
+            </div>
+        {% endfor %}
+
+        <!-- Course rows -->
+        {% for period in periods %}
+            {% set row = period + 1 %}
+
+            <!-- Time label -->
+            <div class="time-label" style="grid-column: 1; grid-row: {{ row }};">
+                {{ period }}<br>
+                <small>{{ period_times.get(period, '') }}</small>
+            </div>
+
+            <!-- Courses for each day -->
+            {% for day in range(1, 6) %}
+                {% set cell = time_table.get(day, {}).get(period) %}
+                {% set col = day + 1 %}
+
+                {% if cell and cell.span_start == period %}
+                    <div class="course-cell"
+                         style="grid-column: {{ col }};
+                                grid-row: {{ row }} / span {{ cell.span_end - cell.span_start + 1 }};">
+                        <div class="course-name">{{ cell.name }}</div>
+                        <div class="course-detail">
+                            {{ cell.teacher }}<br>
+                            {{ cell.classroom }}
+                        </div>
+                    </div>
+                {% elif not cell %}
+                    <div style="grid-column: {{ col }}; grid-row: {{ row }};"></div>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div style="padding: 16px; text-align: center; color: #6c757d; font-size: 14px; background: #fafafa;">
+        Note: Yellow blocks indicate class periods; white areas are free.
+    </div>
+</div>
+
+<a href="{{ url_for('main.dashboard') }}"
+   style="display: block; text-align: center; margin: 24px auto 16px; color: #c2185b; text-decoration: none; font-weight: 600; max-width: 250px;">
+    ← Back to Student Dashboard
+</a>
+{% endblock %}

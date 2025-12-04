@@ -1,0 +1,375 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Course Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>
+    <i class="material-icons">menu_book</i> Course Management
+  </h2>
+  <a href="{{ url_for('admin.add_course') }}" class="btn btn-primary">
+    <i class="material-icons">add</i> Add Course
+  </a>
+</div>
+
+<!-- College Filter Dropdown -->
+<form method="GET" class="filter-form">
+  <label for="college-filter" class="filter-label">
+    <i class="material-icons">filter_list</i> Filter by College:
+  </label>
+  <select name="college_id" id="college-filter" class="form-select filter-select">
+    <option value="">— All Colleges —</option>
+    {% for col in colleges %}
+      <option value="{{ col.college_id }}" {% if request.args.get('college_id') == col.college_id|string %}selected{% endif %}>
+        {{ col.college_name }}
+        {% if col.college_id in college_count_dict %}
+          ({{ college_count_dict[col.college_id] }})
+        {% endif %}
+      </option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-outline filter-btn">
+    <i class="material-icons">search</i> Apply
+  </button>
+  {% if request.args.get('college_id') %}
+  <a href="{{ url_for('admin.courses') }}" class="btn btn-text">
+    <i class="material-icons">clear</i> Clear Filter
+  </a>
+  {% endif %}
+</form>
+
+<!-- Course List -->
+{% if courses %}
+<div class="table-container">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Course ID</th>
+        <th>Course Name</th>
+        <th>Credits</th>
+        <th>Hours</th>
+        <th>College</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in courses %}
+      <tr>
+        <td>{{ c.course_id }}</td>
+        <td>{{ c.course_name or '—' }}</td>
+        <td>{{ c.credits or '—' }}</td>
+        <td>{{ c.hours or '—' }}</td>
+        <td>{{ c.college_name or c.college_id or '—' }}</td>
+        <td>
+          <a href="{{ url_for('admin.edit_course', course_id=c.course_id) }}" class="btn btn-sm btn-outline">
+            <i class="material-icons">edit</i> Edit
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination Section -->
+<div class="pagination-section">
+  <div class="pagination-info">
+    Total {{ pagination.total }} records, {{ pagination.per_page }} per page, Page {{ pagination.page }} of {{ pagination.pages }}
+  </div>
+
+  <div class="pagination-controls">
+    <!-- Previous Page -->
+    {% if pagination.page > 1 %}
+      <a href="{{ url_for('admin.courses', page=pagination.page - 1, college_id=request.args.get('college_id')) }}" class="pagination-btn">
+        <i class="material-icons">chevron_left</i> Previous
+      </a>
+    {% else %}
+      <span class="pagination-btn disabled">
+        <i class="material-icons">chevron_left</i> Previous
+      </span>
+    {% endif %}
+
+    <!-- Page Numbers (Smart Ellipsis) -->
+    {% set start = [1, pagination.page - 2] | max %}
+    {% set end = [pagination.pages, pagination.page + 2] | min %}
+
+    {% if start > 1 %}
+      <a href="{{ url_for('admin.courses', page=1, college_id=request.args.get('college_id')) }}" class="pagination-page">1</a>
+      {% if start > 2 %}
+        <span class="pagination-ellipsis">…</span>
+      {% endif %}
+    {% endif %}
+
+    {% for p in range(start, end + 1) %}
+      {% if p == pagination.page %}
+        <span class="pagination-page active">{{ p }}</span>
+      {% else %}
+        <a href="{{ url_for('admin.courses', page=p, college_id=request.args.get('college_id')) }}" class="pagination-page">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if end < pagination.pages %}
+      {% if end < pagination.pages - 1 %}
+        <span class="pagination-ellipsis">…</span>
+      {% endif %}
+      <a href="{{ url_for('admin.courses', page=pagination.pages, college_id=request.args.get('college_id')) }}" class="pagination-page">{{ pagination.pages }}</a>
+    {% endif %}
+
+    <!-- Next Page -->
+    {% if pagination.page < pagination.pages %}
+      <a href="{{ url_for('admin.courses', page=pagination.page + 1, college_id=request.args.get('college_id')) }}" class="pagination-btn">
+        Next <i class="material-icons">chevron_right</i>
+      </a>
+    {% else %}
+      <span class="pagination-btn disabled">
+        Next <i class="material-icons">chevron_right</i>
+      </span>
+    {% endif %}
+  </div>
+
+  <!-- Go to Specific Page -->
+  <form method="GET" class="goto-page-form">
+    <input type="hidden" name="college_id" value="{{ request.args.get('college_id', '') }}">
+    Go to page
+    <input type="number" name="page" min="1" max="{{ pagination.pages }}" value="{{ pagination.page }}" class="goto-input">
+    <button type="submit" class="btn btn-text" style="padding: 4px 8px; font-size: 13px;">
+      <i class="material-icons">navigate_next</i> Go
+    </button>
+  </form>
+</div>
+
+{% else %}
+<div class="empty-state">
+  <p><i class="material-icons">book</i> No courses available</p>
+</div>
+{% endif %}
+
+<style>
+/* ========== Page Header ========== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.page-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 26px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-header h2 .material-icons {
+  color: #4caf50;
+}
+
+/* ========== Button Styles ========== */
+.btn, .btn-primary, .btn-outline, .btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-primary {
+  background-color: #4caf50;
+  color: white;
+  border: 1px solid #4caf50;
+}
+.btn-primary:hover {
+  background-color: #43a047;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(76,175,80,0.3);
+}
+.btn-outline {
+  background: white;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+}
+.btn-outline:hover {
+  background-color: #e3f2fd;
+}
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.btn-text {
+  color: #e53935;
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+}
+.btn-text:hover {
+  background-color: #ffebee;
+}
+
+/* ========== Filter Form ========== */
+.filter-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+.filter-label {
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 15px;
+}
+.filter-select {
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  background: white;
+}
+.filter-btn {
+  height: auto;
+}
+
+/* ========== Table ========== */
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 2px;
+}
+.data-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+.data-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+.data-table tbody tr:nth-child(even) {
+  background-color: #fcfcfd;
+}
+.data-table tbody tr:hover {
+  background-color: #f0f7f2 !important;
+}
+
+/* ========== Empty State ========== */
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: #777;
+  font-size: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.empty-state .material-icons {
+  font-size: 28px;
+  margin-bottom: 12px;
+  color: #aaa;
+}
+
+/* ========== Pagination Section ========== */
+.pagination-section {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+.pagination-info {
+  color: #666;
+  font-size: 14px;
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pagination-btn, .pagination-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  min-width: 36px;
+  text-align: center;
+}
+.pagination-btn {
+  background: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #bbdefb;
+}
+.pagination-btn:hover:not(.disabled) {
+  background: #bbdefb;
+}
+.pagination-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pagination-page {
+  background: white;
+  border: 1px solid #ddd;
+  color: #333;
+}
+.pagination-page.active {
+  background: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+.pagination-ellipsis {
+  color: #999;
+  padding: 0 6px;
+}
+
+/* Go to Page Input */
+.goto-page-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
+}
+.goto-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* ========== Icons ========== */
+.material-icons {
+  font-size: 18px;
+  vertical-align: middle;
+  line-height: 1;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,260 @@
+{% extends "teacher/teacher_base.html" %}
+{% block title %}Course Details - {{ course.course_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+    .page-header h2 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+
+    .info-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 24px;
+        line-height: 1.6;
+    }
+    .info-card p {
+        margin: 8px 0;
+        color: #34495e;
+    }
+    .info-card strong {
+        color: #2c3e50;
+        width: 150px;
+        display: inline-block;
+    }
+
+    .student-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin: 15px 0;
+    }
+    .student-table th {
+        background-color: #f8f9fa;
+        padding: 14px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #2c3e50;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .student-table td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+        color: #424242;
+    }
+    .student-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .pending {
+        color: #e74c3c;
+        font-style: italic;
+    }
+
+    .stats-card {
+        background: #f8fff9;
+        border-left: 4px solid #28a745;
+        padding: 20px;
+        border-radius: 0 12px 12px 0;
+        margin-top: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stats-card h4 {
+        margin-top: 0;
+        color: #27ae60;
+        font-size: 18px;
+    }
+    .stats-card p {
+        margin: 10px 0;
+        color: #2c3e50;
+    }
+    .progress-text {
+        font-weight: bold;
+    }
+    .progress-complete { color: #28a745; }
+    .progress-partial { color: #ffc107; }
+    .progress-none { color: #dc3545; }
+
+    .empty-state {
+        text-align: center;
+        padding: 24px;
+        color: #7f8c8d;
+        background: #fafafa;
+        border-radius: 12px;
+        margin: 15px 0;
+        border: 1px dashed #ddd;
+        font-style: italic;
+    }
+
+    .action-bar {
+        display: flex;
+        gap: 16px; /* 按钮间距 */
+        margin-top: 24px;
+        flex-wrap: wrap; /* 小屏自动换行 */
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        text-decoration: none;
+        font-size: 15px;
+        transition: all 0.2s ease;
+        min-height: 44px; /* 符合可访问性点击区域 */
+    }
+
+    .btn i.material-icons {
+        font-size: 18px;
+        vertical-align: middle;
+    }
+
+    /* 主要按钮：录入成绩 */
+    .btn-primary {
+        background-color: #7b1fa2;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #4a148c;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(123, 31, 162, 0.3);
+    }
+
+    /* 次要按钮：返回仪表盘 */
+    .btn-secondary {
+        background-color: #f5f5f5;
+        color: #555;
+        border: 1px solid #ddd;
+    }
+
+    .btn-secondary:hover {
+        background-color: #e9e9e9;
+        color: #333;
+        border-color: #ccc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <i class="material-icons">assignment</i>
+    <h2>Course Details - {{ course.course_name }}</h2>
+</div>
+
+<!-- 课程基本信息 -->
+<div class="info-card">
+    <p><strong>Course ID:</strong> {{ course.course_id }}</p>
+    <p><strong>Credits:</strong> {{ course.credits }}</p>
+    <p><strong>Hours:</strong> {{ course.hours }}</p>
+    <p><strong>Semester:</strong> {{ course.semester_name }}</p>
+    <p><strong>Classroom:</strong> {{ course.classroom or '—' }}</p>
+    <p><strong>Time Slot:</strong> {{ course.time_slot or '—' }}</p>
+    <p><strong>Instructor:</strong> {{ course.teacher_name }}</p>
+    <p><strong>College:</strong> {{ course.college_name }}</p>
+    <p><strong>Enrolled Students:</strong> <strong style="color: #28a745;">{{ students|length }} students</strong></p>
+</div>
+
+<h3>Student Enrollment List</h3>
+
+{% if students %}
+<table class="student-table">
+    <thead>
+        <tr>
+            <th>Student ID</th>
+            <th>Name</th>
+            <th>Gender</th>
+            <th>College</th>
+            <th>Regular Score</th>
+            <th>Exam Score</th>
+            <th>Total Score</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in students %}
+        <tr>
+            <td>{{ student.student_id }}</td>
+            <td>{{ student.name }}</td>
+            <td>{{ 'Male' if student.gender == 'M' else 'Female' }}</td>
+            <td>{{ student.student_college or '—' }}</td>
+            <td class="{% if not student.regular_score %}pending{% endif %}">
+                {{ student.regular_score or 'Pending Entry' }}
+            </td>
+            <td class="{% if not student.exam_score %}pending{% endif %}">
+                {{ student.exam_score or 'Pending Entry' }}
+            </td>
+            <td class="{% if not student.total_score %}pending{% endif %}">
+                {{ student.total_score or 'Pending Entry' }}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- 成绩统计 -->
+<div class="stats-card">
+    <h4>Score Statistics</h4>
+    {% set total_students = students|length %}
+    {% set pending_count = students|selectattr("total_score", "none")|list|length %}
+    {% set completed_count = total_students - pending_count %}
+    {% set total_scores = students|selectattr("total_score")|map(attribute="total_score")|list %}
+    {% set average_score = (total_scores|sum / completed_count)|round(1) if completed_count > 0 else 0 %}
+
+    <p><strong>Pending Entries:</strong> <span style="color:#e74c3c;">{{ pending_count }}</span> students</p>
+
+    <p><strong>Average Score:</strong>
+        {% if completed_count > 0 %}
+            <span style="color:#27ae60;">{{ average_score }} points</span> (based on {{ completed_count }} students)
+        {% else %}
+            <span style="color:#95a5a6;">No score data available</span>
+        {% endif %}
+    </p>
+
+    <p><strong>Entry Progress:</strong>
+        {% set progress_pct = ((completed_count / total_students) * 100)|round(1) if total_students > 0 else 0 %}
+        <span class="
+            {% if completed_count == total_students %}progress-complete
+            {% elif completed_count > 0 %}progress-partial
+            {% else %}progress-none
+            {% endif %} progress-text">
+            {{ completed_count }} / {{ total_students }} ({{ progress_pct }}%)
+        </span>
+    </p>
+</div>
+
+{% else %}
+<div class="empty-state">
+    <i class="material-icons" style="font-size:48px; color:#bdbdbd;">people_alt</i>
+    <div>No students have enrolled yet.</div>
+</div>
+{% endif %}
+
+<!-- 操作按钮 -->
+<div class="action-bar">
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+        <i class="material-icons">arrow_back</i>
+        Back to Dashboard
+    </a>
+    <a href="{{ url_for('teacher.grade_input', offered_id=course.offered_id) }}" class="btn btn-primary">
+        <i class="material-icons">edit</i>
+        Enter Grades
+    </a>
+</div>
+
+{% endblock %}

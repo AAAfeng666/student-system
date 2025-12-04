@@ -1,0 +1,173 @@
+{% extends "student/student_base.html" %}
+{% block title %}Edit Profile Information{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-form-container {
+    max-width: 720px;
+    margin: 28px auto;
+    background: white;
+    padding: 28px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(123, 31, 162, 0.12);
+}
+.profile-form-container h2 {
+    margin-top: -8px;
+    margin-bottom: 15px;
+    color: #7b1fa2;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 15px;
+}
+.form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+.form-control:focus {
+    outline: none;
+    border-color: #7b1fa2;
+    box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.15);
+}
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+@media (max-width: 650px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+.btn-submit {
+    background: linear-gradient(135deg, #7b1fa2, #c2185b);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 2px 6px rgba(123, 31, 162, 0.2);
+}
+.btn-submit:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+}
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    color: #7b1fa2;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.btn-back:hover {
+    color: #c2185b;
+    text-decoration: underline;
+}
+.required::after {
+    content: " *";
+    color: #e74c3c;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-form-container">
+    <h2>
+        <i class="material-icons" style="font-size: 24px; color: #7b1fa2;">edit</i>
+        Edit Profile Information
+    </h2>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for msg in messages %}
+                    <div style="padding: 10px; background: #ffeaa7; color: #2c3e50; border-radius: 6px; margin-bottom: 8px;">
+                        {{ msg }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="required">Full Name</label>
+                <input type="text" name="name" value="{{ student.name }}" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Gender</label>
+                <select name="gender" class="form-control">
+                    <option value="">— Please Select —</option>
+                    <option value="M" {% if student.gender == 'M' %}selected{% endif %}>Male</option>
+                    <option value="F" {% if student.gender == 'F' %}selected{% endif %}>Female</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Date of Birth</label>
+                <input type="date" name="birth_date"
+                       value="{{ student.birth_date if student.birth_date else '' }}"
+                       class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" name="phone"
+                       value="{{ student.phone if student.phone else '' }}"
+                       placeholder="e.g., 13812345678"
+                       class="form-control">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Hometown</label>
+            <input type="text" name="hometown"
+                   value="{{ student.hometown if student.hometown else '' }}"
+                   placeholder="e.g., Hangzhou, Zhejiang Province"
+                   class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label class="required">ID Number</label>
+            <input type="text" name="id_card"
+                   value="{{ student.id_card }}"
+                   maxlength="18"
+                   placeholder="18-digit ID number (last digit may be X)"
+                   class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn-submit">
+            <i class="material-icons" style="font-size: 18px;">save</i>
+            Save Changes
+        </button>
+    </form>
+
+    <a href="{{ url_for('main.dashboard') }}" class="btn-back">
+        <i class="material-icons" style="font-size: 18px;">arrow_back</i>
+        Back to Dashboard
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends "minimal_base.html" %}
+
+{% block title %}Login - Student Management System{% endblock %}
+
+{% block content %}
+<style>
+/* 添加学校主题背景 */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* 防止水平滚动条 */
+}
+
+/* 背景设置 */
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    background-image: url('/static/images/view.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* 不要 center，避免顶部空间不足 */
+    min-height: 100vh;
+    padding-top: 80px; /* 用 padding-top 替代 transform */
+}
+
+.login-container {
+    max-width: 420px;
+    width: 90%;
+    margin: 0;
+    padding: 0;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    position: relative;
+}
+
+.school-logo {
+    position: absolute;
+    top: 25px;
+    left: 30px;
+    width: 80px;
+    height: 80px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%231a3a6c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>') no-repeat center center;
+    background-size: 70%;
+    opacity: 0.15;
+    z-index: 1;
+}
+
+.school-header {
+    text-align: center;
+    padding: 25px 0 15px;
+    background: linear-gradient(to right, #1a3a6c, #2c5282);
+    color: white;
+    position: relative;
+    z-index: 2;
+}
+
+.school-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.school-header h2 {
+    font-size: 16px;
+    opacity: 0.9;
+    margin-top: 4px;
+    font-weight: 400;
+}
+
+.login-card {
+    padding: 35px 40px;
+    position: relative;
+    z-index: 2;
+}
+
+.input-group {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.input-group input {
+    width: 83%;
+    padding: 14px 16px 14px 40px;
+    border: 1px solid #e0e6ef;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.input-group i {
+    position: absolute;
+    left: 16px;
+    top: 65%;
+    transform: translateY(-50%);
+    color: #3498db;
+    font-size: 16px;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(to right, #2c5282, #1a3a6c);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(26, 58, 108, 0.4);
+}
+
+.login-btn:hover {
+    background: linear-gradient(to right, #1a3a6c, #2c5282);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 58, 108, 0.5);
+}
+
+.extra-links {
+    text-align: center;
+    margin-top: 25px;
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+.extra-links a {
+    color: #3498db;
+    text-decoration: none;
+    margin: 0 8px;
+    transition: color 0.2s;
+}
+
+.extra-links a:hover {
+    color: #1abc9c;
+    text-decoration: underline;
+}
+
+.school-footer {
+    text-align: center;
+    padding: 20px 40px;
+    color: #7f8c8d;
+    font-size: 13px;
+    border-top: 1px solid #f0f4f8;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        margin: 25px;
+        border-radius: 12px;
+    }
+
+    .login-card {
+        padding: 30px 25px;
+    }
+}
+</style>
+
+<div class="login-wrapper">
+    <div class="login-container">
+        <div class="school-logo"></div>
+        <div class="school-header">
+            <h1>City University</h1>
+            <h2>Unified Identity Authentication</h2>
+        </div>
+        <div class="login-card">
+            <form method="POST">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <i class="fas fa-user"></i>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Enter your student/employee ID"
+                        required
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <i class="fas fa-lock"></i>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Log in to Campus System
+                </button>
+            </form>
+
+            <div class="extra-links">
+                <a href="{{ url_for('auth.forgot_password') }}"><i class="fas fa-question-circle"></i> Forgot Password</a>
+                <a href="#"><i class="fas fa-mobile-alt"></i> Mobile Login</a>
+            </div>
+
+            <div class="school-footer">
+                <p>© 2023 City University IT Service Center | Hotline: 020-12345678</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

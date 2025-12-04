@@ -1,0 +1,174 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}College Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>
+    <i class="material-icons">school</i> College Management
+  </h2>
+  <a href="{{ url_for('admin.add_college') }}" class="btn btn-primary">
+    <i class="material-icons">add</i> Add College
+  </a>
+</div>
+
+
+<!-- 学院列表 -->
+{% if colleges %}
+<div class="table-container">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>College ID</th>
+        <th>College Name</th>
+        <th>Address</th>
+        <th>Phone</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for col in colleges %}
+      <tr>
+        <td>{{ col.college_id }}</td>
+        <td>{{ col.college_name }}</td>
+        <td>{{ col.address or '—' }}</td>
+        <td>{{ col.phone or '—' }}</td>
+        <td>
+          <a href="{{ url_for('admin.edit_college', college_id=col.college_id) }}" class="btn btn-sm btn-outline">
+            <i class="material-icons">edit</i> Edit
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <p><i class="material-icons">domain</i> No colleges available</p>
+</div>
+{% endif %}
+
+<style>
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.page-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 26px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-header h2 .material-icons {
+  color: #4caf50;
+}
+
+.btn, .btn-primary, .btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background-color: #4caf50;
+  color: white;
+  border: 1px solid #4caf50;
+}
+.btn-primary:hover {
+  background-color: #43a047;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(76,175,80,0.3);
+}
+.btn-outline {
+  background: transparent;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+}
+.btn-outline:hover {
+  background-color: #e3f2fd;
+}
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.info-banner {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info-banner .material-icons {
+  font-size: 20px;
+}
+
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 2px;
+}
+.data-table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+.data-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+.data-table tbody tr:nth-child(even) {
+  background-color: #fcfcfd;
+}
+.data-table tbody tr:hover {
+  background-color: #f0f7f2 !important;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: #777;
+  font-size: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.empty-state .material-icons {
+  font-size: 28px;
+  margin-bottom: 12px;
+  color: #aaa;
+}
+
+.material-icons {
+  font-size: 18px;
+  vertical-align: middle;
+  line-height: 1;
+}
+</style>
+{% endblock %}

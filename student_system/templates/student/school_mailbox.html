@@ -1,0 +1,945 @@
+<!-- templates/student/school_mailbox.html -->
+{% extends "student/student_base.html" %}
+
+{% block title %}School Mailbox - Multi-round Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== VARIABLES & RESET ===== */
+  :root {
+    --primary: #7b1fa2;
+    --primary-dark: #6a1b9a;
+    --primary-light: #9c27b0;
+    --primary-bg: rgba(123, 31, 162, 0.08);
+    --secondary: #f5f5f5;
+    --text-dark: #333;
+    --text-medium: #555;
+    --text-light: #777;
+    --text-lighter: #999;
+    --border: #e0e0e0;
+    --border-light: #f0f0f0;
+    --white: #ffffff;
+    --student-bg: #e3f2fd;
+    --student-text: #1565c0;
+    --admin-bg: #e8f5e9;
+    --admin-text: #2e7d32;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 12px;
+    --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* ===== PAGE HEADER ===== */
+  .mailbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+  }
+
+  .header-title i {
+    font-size: 28px;
+    color: var(--primary);
+    background: var(--primary-bg);
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-title h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .header-subtitle {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+
+  /* ===== NEW MESSAGE FORM ===== */
+  .new-message-card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 28px;
+    margin-bottom: 40px;
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+  }
+
+  .new-message-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--primary-bg);
+  }
+
+  .card-header i {
+    color: var(--primary);
+    font-size: 20px;
+  }
+
+  .card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 0;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-medium);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .form-label i {
+    font-size: 14px;
+    opacity: 0.7;
+  }
+
+  .form-input,
+  .form-textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: inherit;
+    transition: var(--transition);
+    background: var(--white);
+  }
+
+  .form-input:focus,
+  .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.15);
+    background: var(--white);
+  }
+
+  .form-textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  .char-counter {
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-lighter);
+    margin-top: 6px;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(123, 31, 162, 0.2);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    box-shadow: 0 6px 16px rgba(123, 31, 162, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* ===== THREAD LIST ===== */
+  .threads-container {
+    margin-top: 40px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .section-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .thread-count {
+    background: var(--primary-bg);
+    color: var(--primary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* ===== THREAD CARD ===== */
+  .thread-card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+    transition: var(--transition);
+  }
+
+  .thread-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--border);
+  }
+
+  .thread-card.expanded {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-light);
+  }
+
+  /* Thread Header */
+  .thread-header {
+    padding: 20px 24px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .thread-card:hover .thread-header {
+    background: var(--primary-bg);
+  }
+
+  .thread-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+    flex-shrink: 0;
+  }
+
+  .thread-card.has-replies .thread-status {
+    background: #4caf50;
+  }
+
+  .thread-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .thread-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0 0 6px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .thread-preview {
+    font-size: 14px;
+    color: var(--text-light);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .thread-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .thread-time {
+    font-size: 13px;
+    color: var(--text-lighter);
+    white-space: nowrap;
+  }
+
+  .thread-badge {
+    background: var(--secondary);
+    color: var(--text-medium);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .expand-icon {
+    color: var(--primary);
+    font-size: 12px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  .thread-card.expanded .expand-icon {
+    transform: rotate(90deg);
+  }
+
+  /* Thread Details */
+  .thread-details {
+    display: none;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .thread-card.expanded .thread-details {
+    display: block;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Main Message */
+  .main-message {
+    padding: 24px;
+    background: linear-gradient(to bottom, var(--primary-bg), transparent 80%);
+  }
+
+  .message-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .author-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .author-info .time {
+    font-size: 13px;
+    color: var(--text-lighter);
+  }
+
+  .message-content {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-medium);
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding-left: 52px;
+  }
+
+  .content-collapsed {
+    max-height: 72px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .content-collapsed::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, var(--white));
+  }
+
+  /* Replies */
+  .replies-section {
+    padding: 0 24px 24px;
+  }
+
+  .replies-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .replies-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-dark);
+  }
+
+  .reply-count {
+    background: var(--secondary);
+    color: var(--text-medium);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .reply-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .reply-item {
+    margin-bottom: 20px;
+    padding-left: 40px;
+    position: relative;
+  }
+
+  .reply-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .reply-item::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 0;
+    bottom: -20px;
+    width: 2px;
+    background: var(--border-light);
+  }
+
+  .reply-item:last-child::before {
+    bottom: 50%;
+  }
+
+  .reply-avatar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    z-index: 1;
+  }
+
+  .reply-student {
+    background: linear-gradient(135deg, var(--student-bg), #bbdefb);
+    color: var(--student-text);
+  }
+
+  .reply-admin {
+    background: linear-gradient(135deg, var(--admin-bg), #c8e6c9);
+    color: var(--admin-text);
+  }
+
+  .reply-bubble {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .reply-author {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 14px;
+  }
+
+  .reply-role {
+    background: var(--secondary);
+    color: var(--text-medium);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-left: 8px;
+  }
+
+  .reply-time {
+    font-size: 12px;
+    color: var(--text-lighter);
+  }
+
+  .reply-content {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-medium);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Reply Form */
+  .reply-form {
+    padding: 24px;
+    background: var(--secondary);
+    border-top: 1px solid var(--border-light);
+  }
+
+  .reply-form textarea {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    transition: var(--transition);
+    background: var(--white);
+  }
+
+  .reply-form textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.15);
+  }
+
+  .reply-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+
+  .btn-reply {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-reply:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(123, 31, 162, 0.25);
+  }
+
+  /* ===== UTILITY CLASSES ===== */
+  .empty-state {
+    text-align: center;
+    padding: 60px 40px;
+    color: var(--text-lighter);
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+  }
+
+  .empty-state h3 {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-light);
+  }
+
+  .empty-state p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .btn-text {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-text:hover {
+    background: var(--primary-bg);
+    text-decoration: none;
+  }
+
+  /* ===== RESPONSIVE DESIGN ===== */
+  @media (max-width: 768px) {
+    .mailbox-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .header-title {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .header-title h1 {
+      font-size: 24px;
+    }
+
+    .thread-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .thread-meta {
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .reply-item {
+      padding-left: 32px;
+    }
+
+    .reply-avatar {
+      width: 32px;
+      height: 32px;
+      font-size: 13px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mailbox-header">
+  <div class="header-title">
+    <i>📬</i>
+    <div>
+      <h1>School Mailbox</h1>
+      <div class="header-subtitle">Multi-round conversation with school administration</div>
+    </div>
+  </div>
+  <div class="thread-count">{{ threads|length }} Conversation{{ 's' if threads|length != 1 else '' }}</div>
+</div>
+
+<!-- New Message Form -->
+<div class="new-message-card">
+  <div class="card-header">
+    <i></i>
+    <h3>Start New Conversation</h3>
+  </div>
+  <form method="POST" class="form-grid">
+    <div class="form-group">
+      <label for="title" class="form-label">
+        <i></i>
+        Subject
+      </label>
+      <input type="text" id="title" name="title" maxlength="100" required class="form-input" placeholder="What would you like to discuss?">
+      <div class="char-counter"><span id="title-counter">0</span>/100 characters</div>
+    </div>
+
+    <div class="form-group">
+      <label for="content" class="form-label">
+        <i></i>
+        Message
+      </label>
+      <textarea id="content" name="content" rows="5" maxlength="2000" required class="form-textarea" placeholder="Write your message here..."></textarea>
+      <div class="char-counter"><span id="content-counter">0</span>/2000 characters</div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary">
+        <i></i>
+        Send Message
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Thread List -->
+<div class="threads-container">
+  <div class="section-header">
+    <h2>
+      <i>📋</i>
+      Your Conversations
+    </h2>
+    <div class="thread-count">{{ threads|length }} Conversation{{ 's' if threads|length != 1 else '' }}</div>
+  </div>
+
+  {% for thread in threads %}
+    <div class="thread-card {% if thread.replies %}has-replies{% endif %}" data-thread-id="{{ thread.main.message_id }}">
+      <!-- Header (always visible) -->
+      <div class="thread-header">
+        <div class="thread-status"></div>
+        <div class="thread-content">
+          <h3 class="thread-title">{{ thread.main.title }}</h3>
+          <p class="thread-preview">{{ thread.main.content[:80] }}{% if thread.main.content|length > 80 %}...{% endif %}</p>
+        </div>
+        <div class="thread-meta">
+          <div class="thread-time">{{ thread.main.created_at }}</div>
+          <div class="thread-badge">
+            {{ thread.replies|length }} repl{{ 'y' if thread.replies|length == 1 else 'ies' }}
+          </div>
+        </div>
+        <span class="expand-icon">▶</span>
+      </div>
+
+      <!-- Collapsible Details -->
+      <div class="thread-details">
+        <!-- Main Message -->
+        <div class="main-message">
+          <div class="message-author">
+            <div class="author-avatar">Y</div>
+            <div class="author-info">
+              <h4>You</h4>
+              <div class="time">{{ thread.main.created_at }}</div>
+            </div>
+          </div>
+          <div class="message-content {% if thread.main.content|length > 300 %}content-collapsed{% endif %}"
+               data-full-content="{{ thread.main.content }}">
+            {{ thread.main.content|truncate(300) }}
+          </div>
+          {% if thread.main.content|length > 300 %}
+            <button type="button" class="btn-text expand-content-btn" style="margin-top: 12px; margin-left: 52px;">
+              <i>↕️</i>
+              Read more
+            </button>
+          {% endif %}
+        </div>
+
+        <!-- Replies -->
+        {% if thread.replies %}
+          <div class="replies-section">
+            <div class="replies-header">
+              <h4><i>💭</i> Replies</h4>
+              <div class="reply-count">{{ thread.replies|length }} repl{{ 'y' if thread.replies|length == 1 else 'ies' }}</div>
+            </div>
+            <ul class="reply-list">
+              {% for rep in thread.replies %}
+                <li class="reply-item">
+                  <div class="reply-avatar {{ 'reply-student' if rep.sender_role == 'student' else 'reply-admin' }}">
+                    {{ rep.sender_name[0] }}
+                  </div>
+                  <div class="reply-bubble">
+                    <div class="reply-header">
+                      <div>
+                        <span class="reply-author">{{ rep.sender_name }}</span>
+                        <span class="reply-role">{{ rep.sender_role|title }}</span>
+                      </div>
+                      <div class="reply-time">{{ rep.created_at }}</div>
+                    </div>
+                    <div class="reply-content">{{ rep.content }}</div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <!-- Reply Form -->
+        <div class="reply-form">
+          <form method="POST" action="{{ url_for('student.reply_to_thread', message_id=thread.main.message_id) }}">
+            <textarea name="content" maxlength="500" required placeholder="Continue the conversation..."></textarea>
+            <div class="reply-actions">
+              <button type="submit" class="btn-reply">
+                <i></i>
+                Send Reply
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+
+  {% if not threads %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3>No conversations yet</h3>
+      <p>Start your first conversation with the school administration. Ask questions, share concerns, or request information.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Character counters
+  const titleInput = document.getElementById('title');
+  const contentTextarea = document.getElementById('content');
+  const titleCounter = document.getElementById('title-counter');
+  const contentCounter = document.getElementById('content-counter');
+
+  if (titleInput && titleCounter) {
+    titleInput.addEventListener('input', function() {
+      titleCounter.textContent = this.value.length;
+    });
+    titleCounter.textContent = titleInput.value.length;
+  }
+
+  if (contentTextarea && contentCounter) {
+    contentTextarea.addEventListener('input', function() {
+      contentCounter.textContent = this.value.length;
+    });
+    contentCounter.textContent = contentTextarea.value.length;
+  }
+
+  // Toggle thread expand/collapse
+  document.querySelectorAll('.thread-header').forEach(header => {
+    header.addEventListener('click', function(e) {
+      // Don't toggle if clicking on expand button
+      if (e.target.closest('.btn-text, .expand-content-btn')) return;
+
+      const card = this.closest('.thread-card');
+      card.classList.toggle('expanded');
+
+      // Close other expanded threads
+      document.querySelectorAll('.thread-card.expanded').forEach(otherCard => {
+        if (otherCard !== card) {
+          otherCard.classList.remove('expanded');
+        }
+      });
+    });
+  });
+
+  // Expand/collapse long content
+  document.querySelectorAll('.expand-content-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const contentDiv = this.previousElementSibling;
+      const fullContent = contentDiv.dataset.fullContent;
+
+      if (contentDiv.classList.contains('content-collapsed')) {
+        contentDiv.classList.remove('content-collapsed');
+        contentDiv.textContent = fullContent;
+        this.innerHTML = '<i>↕️</i> Show less';
+      } else {
+        contentDiv.classList.add('content-collapsed');
+        contentDiv.textContent = fullContent.substring(0, 300) + '...';
+        this.innerHTML = '<i>↕️</i> Read more';
+      }
+    });
+  });
+
+  // Auto-focus new message form if no threads
+  {% if not threads %}
+    if (titleInput) {
+      setTimeout(() => titleInput.focus(), 300);
+    }
+  {% endif %}
+
+  // Smooth scroll to newly created thread
+  const urlParams = new URLSearchParams(window.location.search);
+  const newThreadId = urlParams.get('new');
+  if (newThreadId) {
+    const newThread = document.querySelector(`[data-thread-id="${newThreadId}"]`);
+    if (newThread) {
+      setTimeout(() => {
+        newThread.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        newThread.classList.add('expanded');
+        // Highlight briefly
+        newThread.style.transition = 'box-shadow 0.5s ease';
+        newThread.style.boxShadow = '0 0 0 3px rgba(123, 31, 162, 0.3), 0 8px 24px rgba(0,0,0,0.12)';
+        setTimeout(() => {
+          newThread.style.boxShadow = '';
+        }, 1500);
+      }, 500);
+    }
+  }
+});
+</script>
+{% endblock %}

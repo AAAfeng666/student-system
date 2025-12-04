@@ -1,0 +1,252 @@
+{% extends "teacher/teacher_base.html" %}
+{% block title %}Teacher Dashboard - {{ username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .page-header h2 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.5rem;
+    }
+
+    .user-greeting {
+        font-size: 18px;
+        margin: 12px 0 24px;
+        color: #34495e;
+    }
+
+    .action-bar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+    }
+
+    .action-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #7b1fa2;
+        text-decoration: none;
+        font-weight: 600;
+        padding: 10px 16px;
+        border-radius: 8px;
+        background: #f3e5f5;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        font-size: 14px;
+    }
+
+    .action-link:hover {
+        background: #e1bee7;
+        color: #4a148c;
+    }
+
+    .course-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        margin: 15px 0;
+    }
+
+    .course-table th {
+        background: #f8f9fa;
+        padding: 14px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #2c3e50;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .course-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #eee;
+        color: #424242;
+    }
+
+    .course-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .course-table a {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #7b1fa2;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+        margin-right: 16px;
+        transition: color 0.2s;
+    }
+
+    .course-table a:hover {
+        color: #4a148c;
+        text-decoration: underline;
+    }
+
+    .stats-card {
+        background: white;
+        border-left: 4px solid #7b1fa2;
+        padding: 20px;
+        border-radius: 0 10px 10px 0;
+        margin-top: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .stats-card h3 {
+        margin-top: 0;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.25rem;
+    }
+
+    .stats-card ul {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+
+    .stats-card li {
+        padding: 8px 0;
+        color: #555;
+        font-size: 15px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .stats-card .highlight {
+        font-weight: 600;
+        color: #6a1b9a;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 32px 24px;
+        color: #757575;
+        background: #fafafa;
+        border-radius: 12px;
+        margin: 20px 0;
+        border: 1px dashed #e0e0e0;
+        font-style: normal;
+        font-size: 16px;
+    }
+
+    .empty-state i.material-icons {
+        font-size: 48px;
+        color: #bdbdbd;
+        margin-bottom: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <i class="material-icons">dashboard</i>
+    <h2>Teacher Dashboard</h2>
+</div>
+
+<p class="user-greeting">Hello, Teacher <strong>{{ username }}</strong>!</p>
+
+<!-- Quick Action Links -->
+<div class="action-bar">
+    <a href="{{ url_for('teacher.my_courses') }}" class="action-link">
+        <i class="material-icons" style="font-size:18px;">book</i>
+        View Full Course List
+    </a>
+    <a href="{{ url_for('auth.change_password') }}" class="action-link">
+        <i class="material-icons" style="font-size:18px;">lock</i>
+        Change Password
+    </a>
+</div>
+
+<h3 style="margin: 24px 0 16px; color: #2c3e50;">
+    <i class="material-icons" style="vertical-align: middle; font-size: 20px; margin-right: 6px;">school</i>
+    Current Teaching Courses ({{ courses|length or 0 }})
+</h3>
+
+{% if courses %}
+<table class="course-table">
+    <thead>
+        <tr>
+            <th>Course Name</th>
+            <th>Semester</th>
+            <th>Classroom</th>
+            <th>Time</th>
+            <th>Enrolled / Capacity</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in courses %}
+        <tr>
+            <td>{{ c.course_name }}</td>
+            <td>{{ c.semester_name }}</td>
+            <td>{{ c.classroom or '—' }}</td>
+            <td>{{ c.time_slot or '—' }}</td>
+            <td>{{ c.student_count }} / {{ c.capacity }}</td>
+            <td>
+                <a href="{{ url_for('teacher.grade_input', offered_id=c.offered_id) }}">
+                    <i class="material-icons" style="font-size:16px;">edit</i>
+                    Enter Grades
+                </a>
+                <a href="{{ url_for('teacher.course_detail', offered_id=c.offered_id) }}">
+                    <i class="material-icons" style="font-size:16px;">people</i>
+                    View Roster
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+    <i class="material-icons">event_busy</i>
+    <div>No teaching assignments currently. Please contact the academic administrator if you need to open a course.</div>
+</div>
+{% endif %}
+
+<!-- Teaching Overview Card -->
+<div class="stats-card">
+    <h3><i class="material-icons">insights</i> Teaching Overview</h3>
+    <ul>
+        <li>
+            <span>📅 Current Semester</span>
+            <span class="highlight">{{ current_semester_name }}</span>
+        </li>
+        <li>
+            <span>📚 Total Courses</span>
+            <span class="highlight">{{ (courses|length) or 0 }}</span>
+        </li>
+        <li>
+            <span>👥 Total Students</span>
+            <span class="highlight">{{ total_students or 0 }}</span>
+        </li>
+        <li>
+            <span>📝 Pending Grade Entry</span>
+            <span class="highlight">{{ pending_courses or 0 }} courses</span>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Expandable teacher-specific interaction logic
+</script>
+{% endblock %}

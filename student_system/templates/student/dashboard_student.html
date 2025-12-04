@@ -1,0 +1,176 @@
+{% extends "student/student_base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 16px;
+}
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    padding: 24px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+.card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+.card h3 i.material-icons {
+    font-size: 24px;
+    color: #7b1fa2;
+}
+
+.btn-link {
+    color: #5e35b1;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 17px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+    padding: 6px 0;
+    transition: color 0.2s;
+}
+.btn-link:hover {
+    color: #311b92;
+    text-decoration: underline;
+}
+.btn-link i.material-icons {
+    font-size: 18px;
+}
+
+.empty-warning {
+    color: #d32f2f;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    margin: 12px 0;
+}
+
+.enrollment-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+}
+.enrollment-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 16px;
+}
+.enrollment-list li:last-child {
+    border-bottom: none;
+}
+
+.selection-time-card {
+    background: #f3e5f5; /* 淡紫色背景 */
+    border-left: 4px solid #7b1fa2;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+.selection-time-card h3 i.material-icons {
+    color: #5e35b1;
+}
+.selection-time-text {
+    font-size: 18px;
+    color: #4a148c;
+    font-weight: 500;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<h2>
+    <i class="material-icons" style="vertical-align: middle; margin-right: 8px; font-size: 24px;">dashboard</i>
+    Student Dashboard
+</h2>
+
+<!-- ✅ 新增：选课时间卡片 -->
+{% if selection_window and selection_window.start_fmt and selection_window.end_fmt %}
+<div class="card selection-time-card">
+    <h3><i class="material-icons">schedule</i> Course Selection Period</h3>
+    <p class="selection-time-text">
+        {{ selection_window.start_fmt }} to {{ selection_window.end_fmt }}
+    </p>
+    {% if selection_window.start_fmt <= now_str <= selection_window.end_fmt %}
+        <span class="badge bg-success" style="font-size: 14px; padding: 4px 8px;">
+            ✅ Course selection is currently open
+        </span>
+    {% else %}
+        <span class="badge bg-secondary" style="font-size: 14px; padding: 4px 8px;">
+            🕒 Outside course selection period
+        </span>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="dashboard-grid">
+    <div class="card">
+        <h3><i class="material-icons">book</i> Enrolled Courses</h3>
+        {% if enrollments %}
+            <ul class="enrollment-list">
+            {% for e in enrollments %}
+                <li>
+                    <strong>{{ e.course_name }}</strong> ({{ e.teacher_name }})
+                    {% if e.total_score is not none %}
+                        — <span style="color: #2e7d32; font-weight: 500;">Final Grade: {{ e.total_score }}</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-warning">
+                <i class="material-icons">warning</i>
+                You have not enrolled in any courses yet.
+            </p>
+        {% endif %}
+        <a href="{{ url_for('course.select_course') }}" class="btn-link">
+            <i class="material-icons">arrow_forward</i>
+            Enroll in Courses
+        </a>
+    </div>
+
+    <div class="card">
+        <h3><i class="material-icons">person</i> Personal Actions</h3>
+        <p>
+            <a href="{{ url_for('student.edit_profile') }}" class="btn-link">
+                <i class="material-icons">edit</i>
+                Edit Profile
+            </a>
+        </p>
+        <p>
+            <a href="{{ url_for('auth.change_password') }}" class="btn-link">
+                <i class="material-icons">lock</i>
+                Change Password
+            </a>
+        </p>
+        <p>
+            <a href="{{ url_for('student.timetable') }}" class="btn-link">
+                <i class="material-icons">calendar_today</i>
+                View My Timetable
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}

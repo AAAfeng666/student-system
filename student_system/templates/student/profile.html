@@ -1,0 +1,287 @@
+{% extends "student/student_base.html" %}
+
+{% block title %}Profile - {{ user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(123, 31, 162, 0.12);
+    padding: 28px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .profile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .profile-header i {
+    font-size: 28px;
+    color: #7b1fa2;
+  }
+
+  .profile-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #212121;
+  }
+
+  .field-group {
+    margin-bottom: 24px;
+  }
+
+  .field-group h3 {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #eee;
+  }
+
+  .field-row {
+    display: flex;
+    margin-bottom: 10px;
+  }
+
+  .field-label {
+    width: 120px;
+    font-weight: 500;
+    color: #424242;
+    flex-shrink: 0;
+  }
+
+  .field-value {
+    flex: 1;
+    color: #212121;
+    word-break: break-word;
+  }
+
+  .field-value.empty {
+    color: #9e9e9e;
+    font-style: italic;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #7b1fa2, #c2185b);
+    color: white;
+    box-shadow: 0 2px 5px rgba(123, 31, 162, 0.2);
+  }
+
+  .btn-primary:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(123, 31, 162, 0.3);
+  }
+
+  .btn-secondary {
+    background: #f8f8f8;
+    color: #555;
+    border: 1px solid #ddd;
+  }
+
+  .btn-secondary:hover {
+    background: #e9e9e9;
+    border-color: #ccc;
+  }
+
+  .action-buttons {
+    margin-top: 28px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .info-note {
+    color: #666;
+    font-style: italic;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  @media (max-width: 600px) {
+    .profile-card {
+      padding: 20px;
+    }
+
+    .field-row {
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-label {
+      width: auto;
+      font-weight: 600;
+    }
+
+    .action-buttons {
+      flex-direction: column;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-card">
+  <div class="profile-header">
+    <i class="material-icons">person</i>
+    <h2>Profile</h2>
+  </div>
+
+  <hr style="margin: 16px 0; border-color: #eee;">
+
+  {% if user.role == 'admin' %}
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">Username</span>
+        <span class="field-value">{{ user.username }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Role</span>
+        <span class="field-value">System Administrator</span>
+      </div>
+    </div>
+    <p class="info-note">
+      <i class="material-icons" style="font-size:16px;">info</i>
+      Administrators do not need to maintain personal profiles.
+    </p>
+
+  {% elif user.role == 'student' %}
+    <div class="field-group">
+      <h3>Account Information</h3>
+      <div class="field-row">
+        <span class="field-label">Username</span>
+        <span class="field-value">{{ user.username }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Full Name</span>
+        <span class="field-value {% if not user.name %}empty{% endif %}">{{ user.name or 'Not filled' }}</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <h3>Student Information</h3>
+      <div class="field-row">
+        <span class="field-label">Student ID</span>
+        <span class="field-value {% if not user.student_id %}empty{% endif %}">{{ user.student_id or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Gender</span>
+        <span class="field-value">
+          {% if user.gender == 'M' %}Male
+          {% elif user.gender == 'F' %}Female
+          {% else %}<span class="empty">Unknown</span>{% endif %}
+        </span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Date of Birth</span>
+        <span class="field-value {% if not user.birth_date %}empty{% endif %}">{{ user.birth_date or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">ID Number</span>
+        <span class="field-value {% if not user.id_card %}empty{% endif %}">{{ user.id_card or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Phone</span>
+        <span class="field-value {% if not user.phone %}empty{% endif %}">{{ user.phone or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Hometown</span>
+        <span class="field-value {% if not user.hometown %}empty{% endif %}">{{ user.hometown or '—' }}</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <h3>Academic Information</h3>
+      <div class="field-row">
+        <span class="field-label">College</span>
+        <span class="field-value {% if not user.college_name %}empty{% endif %}">{{ user.college_name or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Enrollment Year</span>
+        <span class="field-value {% if not user.enrollment_year %}empty{% endif %}">{{ user.enrollment_year or '—' }}</span>
+      </div>
+    </div>
+
+  {% elif user.role == 'teacher' %}
+    <div class="field-group">
+      <h3>Account Information</h3>
+      <div class="field-row">
+        <span class="field-label">Username</span>
+        <span class="field-value">{{ user.username }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Full Name</span>
+        <span class="field-value {% if not user.name %}empty{% endif %}">{{ user.name or 'Not filled' }}</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <h3>Faculty Information</h3>
+      <div class="field-row">
+        <span class="field-label">Staff ID</span>
+        <span class="field-value {% if not user.teacher_id %}empty{% endif %}">{{ user.teacher_id or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Gender</span>
+        <span class="field-value">
+          {% if user.gender == 'M' %}Male
+          {% elif user.gender == 'F' %}Female
+          {% else %}<span class="empty">Unknown</span>{% endif %}
+        </span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Date of Birth</span>
+        <span class="field-value {% if not user.birth_date %}empty{% endif %}">{{ user.birth_date or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">ID Number</span>
+        <span class="field-value {% if not user.id_card %}empty{% endif %}">{{ user.id_card or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Title</span>
+        <span class="field-value {% if not user.title %}empty{% endif %}">{{ user.title or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">College</span>
+        <span class="field-value {% if not user.college_name %}empty{% endif %}">{{ user.college_name or '—' }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Salary</span>
+        <span class="field-value {% if not user.salary %}empty{% endif %}">
+          {% if user.salary %}¥{{ "%.2f"|format(user.salary) }}{% else %}—{% endif %}
+        </span>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="action-buttons">
+    <a href="{{ url_for('auth.change_password') }}" class="btn btn-primary">
+      <i class="material-icons" style="font-size: 18px;">lock</i>
+      Change Password
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+      <i class="material-icons" style="font-size: 18px;">arrow_back</i>
+      Back to Dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}

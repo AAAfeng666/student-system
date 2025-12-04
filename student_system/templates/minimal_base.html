@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}学生管理系统{% endblock %}</title>
+  <!-- 引入 Font Awesome 图标（可选） -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* Flash 消息样式 */
+    .flash-messages {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+    }
+    .flash-item {
+      padding: 12px 40px 12px 24px; /* 右侧留空间给 × */
+      margin-bottom: 8px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-weight: 500;
+      text-align: left;
+      min-width: 300px;
+      position: relative;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .flash-info { background: #e3f2fd; color: #1976d2; border-left: 3px solid #2196f3; }
+    .flash-success { background: #e8f5e9; color: #2e7d32; border-left: 3px solid #4caf50; }
+    .flash-error {
+      background: #ffebee;
+      color: #c62828;
+      border-left: 3px solid #f44336;
+    }
+
+    /* 关闭按钮 */
+    .flash-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: inherit;
+      cursor: pointer;
+      opacity: 0.7;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .flash-close:hover {
+      opacity: 1;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- 显示 Flash 消息 -->
+  <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-item flash-{{ category }}">
+            {{ message }}
+            <button type="button" class="flash-close">&times;</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  {% block content %}{% endblock %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const flashItems = document.querySelectorAll('.flash-item');
+
+    flashItems.forEach(function (item) {
+      // 如果是 error 类型（包括 logout 提示），5秒后自动消失
+      if (item.classList.contains('flash-error') || item.classList.contains('flash-info')) {
+        const timer = setTimeout(() => {
+          fadeOut(item);
+        }, 5000);
+
+        // 鼠标悬停时暂停自动消失
+        item.addEventListener('mouseenter', () => clearTimeout(timer));
+        item.addEventListener('mouseleave', () => {
+          setTimeout(() => fadeOut(item), 3000); // 离开后3秒再消失
+        });
+      }
+
+      // 关闭按钮点击事件
+      const closeBtn = item.querySelector('.flash-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          fadeOut(item);
+        });
+      }
+    });
+
+    // 淡出动画函数
+    function fadeOut(element) {
+      element.style.transition = 'opacity 0.3s ease';
+      element.style.opacity = '0';
+      setTimeout(() => {
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      }, 300);
+    }
+  });
+</script>
+</body>
+</html>

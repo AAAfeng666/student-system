@@ -1,0 +1,543 @@
+{% extends "student/student_base.html" %}
+{% block title %}Course Selection System - {{ username }}{% endblock %}
+
+{% block content %}
+<style>
+    .page-header h2 {
+        margin: 0;
+        color: #1a237e;
+        font-weight: 700;
+        font-size: 28px;
+    }
+    .page-welcome {
+        font-size: 18px;
+        margin-bottom: 16px;
+        margin-top: 16px;
+        color: #37474f;
+    }
+    .back-link {
+        color: #1976d2;
+        text-decoration: none;
+        margin-bottom: 10px;
+        display: inline-block;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+    .back-link:hover {
+        color: #0d47a1;
+        text-decoration: underline;
+    }
+
+    .course-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        margin: 20px 0;
+    }
+    .course-table th {
+        background: #e8eaf6;
+        padding: 14px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #1a237e;
+        font-size: 15px;
+        letter-spacing: 0.3px;
+    }
+    .course-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: top;
+    }
+    .course-table tr:last-child td {
+        border-bottom: none;
+    }
+    .course-table tr:hover td {
+        background-color: #fafbff;
+    }
+
+    .btn-select {
+        padding: 8px 16px;
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: background 0.2s;
+    }
+    .btn-select:hover:not(:disabled) {
+        background: #388e3c;
+    }
+    .btn-select:active {
+        transform: translateY(1px);
+    }
+
+    .btn-drop {
+        padding: 6px 12px;
+        background: #f44336;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+    .btn-drop:hover {
+        background: #d32f2f;
+    }
+    .btn-drop:active {
+        transform: translateY(1px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 24px;
+        background: #f9fbfd;
+        border-radius: 12px;
+        color: #546e7a;
+        border: 1px dashed #c5cae9;
+        margin: 20px 0;
+        font-style: italic;
+    }
+
+    .section-title {
+        margin-top: 32px;
+        color: #1a237e;
+        font-size: 20px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-title::before {
+        content: "";
+        display: inline-block;
+        width: 4px;
+        height: 18px;
+        background: #4caf50;
+        border-radius: 2px;
+    }
+
+    .capacity-info {
+        font-size: 0.9em;
+        color: #555;
+        font-style: italic;
+    }
+    .restriction-note {
+        font-size: 0.85em;
+        color: #999;
+        margin-top: 4px;
+        display: block;
+    }
+    .text-danger { color: #e53935; }
+    .text-success { color: #2e7d32; }
+    .text-warning { color: #f57c00; }
+    .text-muted { color: #9e9e9e; }
+
+    .compact-info {
+        font-size: 0.95em;
+        line-height: 1.5;
+        color: #455a64;
+    }
+
+    .details-summary {
+        color: #1976d2;
+        cursor: pointer;
+        font-size: 0.9em;
+        margin-top: 6px;
+        display: inline-block;
+        user-select: none;
+        transition: color 0.2s;
+    }
+    .details-summary:hover {
+        color: #0d47a1;
+        text-decoration: underline;
+    }
+
+    select[name="offered_id"] {
+        width: 100%;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        border: 1px solid #bdbdbd;
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        color: #333;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    }
+    select:focus {
+        outline: none;
+        border-color: #1976d2;
+        box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    }
+
+    /* 学分状态提示 */
+    .credit-status {
+        margin: 16px 0;
+        padding: 14px 20px;
+        background: #e3f2fd;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 4px solid #1976d2;
+    }
+    .credit-status strong {
+        color: #0d47a1;
+        font-size: 16px;
+    }
+</style>
+
+<div class="page-header">
+    <h2>Course Selection System</h2>
+</div>
+<p class="page-welcome">
+    Hello, <strong>{{ username }}</strong>! Current semester: <strong>{{ current_semester.semester_name if current_semester else 'Unknown' }}</strong>
+</p>
+<a href="{{ url_for('main.dashboard') }}" class="back-link">← Back to Dashboard</a>
+
+<!-- 学分状态提示 -->
+<div class="credit-status">
+    <strong>
+        <i class="material-icons" style="vertical-align: middle; margin-right: 6px; font-size: 20px;">school</i>
+        Credits enrolled: <span style="color:#0d47a1;">{{ total_credits }}</span> / 15 (Minimum required: 10 credits)
+    </strong>
+    {% if total_credits < 10 %}
+        <span class="text-danger" style="font-weight:bold;">
+            <i class="material-icons" style="vertical-align: middle; margin-right: 4px; font-size: 18px;">warning</i>
+            Insufficient credits!
+        </span>
+    {% elif total_credits > 15 %}
+        <span class="text-danger" style="font-weight:bold;">
+            <i class="material-icons" style="vertical-align: middle; margin-right: 4px; font-size: 18px;">error</i>
+            Exceeds limit!
+        </span>
+    {% else %}
+        <span class="text-success" style="font-weight:bold;">
+            <i class="material-icons" style="vertical-align: middle; margin-right: 4px; font-size: 18px;">check_circle</i>
+            Credits compliant
+        </span>
+    {% endif %}
+</div>
+
+<!-- 已选课程 -->
+<h3 class="section-title">My Enrolled Courses</h3>
+{% if enrolled_courses %}
+<table class="course-table">
+    <thead>
+        <tr>
+            <th>Course Name</th>
+            <th>Instructor</th>
+            <th>Offering College</th>
+            <th>Class Time</th>
+            <th>Classroom</th>
+            <th>Credits</th>
+            <th>Capacity / Enrolled</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in enrolled_courses %}
+        <tr>
+            <td>{{ c.course_name }}</td>
+            <td>{{ c.teacher_name }}</td>
+            <td>{{ c.college_name }}</td>
+            <td>{{ c.time_slot }}</td>
+            <td>{{ c.classroom }}</td>
+            <td><strong>{{ c.credits }}</strong></td>
+            <td class="capacity-info">{{ c.capacity }} / {{ c.current_count }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('course.drop_course') }}" style="display:inline;">
+                    <input type="hidden" name="offered_id" value="{{ c.offered_id }}">
+                    <button type="submit" class="btn-drop"
+                            onclick="return confirm('Confirm dropping \u00AB{{ c.course_name }}\u00BB?')">
+                        Drop
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">You have not enrolled in any courses this semester.</div>
+{% endif %}
+
+<!-- 本院可选课程（聚合版） -->
+<h3 class="section-title">Available Courses from My College</h3>
+{% if my_college_courses %}
+<table class="course-table">
+    <thead>
+        <tr>
+            <th>Course Name</th>
+            <th>Offering College</th>
+            <th>Credits</th>
+            <th>Grade Requirement</th>
+            <th>Section Details (Instructor / Time / Classroom)</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+      {% for gc in my_college_courses %}
+      <tr>
+        <td><strong>{{ gc.course_name }}</strong></td>
+        <td>{{ gc.college_name }}</td>
+        <td><strong>{{ gc.credits }}</strong></td>
+        <td>Grade {{ gc.target_grade }}</td>
+        <td class="compact-info">
+          Instructor: {{ gc.sections|map(attribute='teacher_name')|join(' / ') }}<br>
+          Time: {{ gc.sections|map(attribute='time_slot')|join(' / ') }}<br>
+          Classroom: {{ gc.sections|map(attribute='classroom')|join(' / ') }}
+          <details>
+            <summary class="details-summary">▶ View all section details</summary>
+            <ul style="padding-left:20px; margin:10px 0; font-size:0.9em; color:#455a64;">
+              {% for sec in gc.sections %}
+              <li style="margin-bottom:6px;">
+                {{ sec.teacher_name }} | {{ sec.time_slot }} | {{ sec.classroom }}
+                ({{ sec.current_count }}/{{ sec.capacity }})
+                {% if sec.is_enrolled %}
+                  <span class="text-success">[Enrolled]</span>
+                {% elif gc.already_enrolled %}
+                  <span class="text-muted">[Course already enrolled]</span>
+                {% elif sec.target_grade != student_grade %}
+                  <span class="text-warning">[For Grade {{ sec.target_grade }} only]</span>
+                {% elif sec.current_count >= sec.capacity %}
+                  <span class="text-danger">[Full]</span>
+                {% elif (total_credits + gc.credits) > 18 %}
+                  <span class="text-danger">[Credit limit exceeded]</span>
+                {% else %}
+                  <span class="text-success">[Available]</span>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+          </details>
+        </td>
+        <td>
+          {% if gc.already_enrolled %}
+            <span class="text-success">
+                <i class="material-icons" style="vertical-align: middle; font-size: 16px;">check_circle</i>
+                Enrolled
+            </span>
+        {% elif gc.selectable_sections %}
+            <form method="post" action="{{ url_for('course.handle_select_course') }}">
+              <select name="offered_id" required>
+                <option value="" disabled selected>Select a section</option>
+                {% for sec in gc.selectable_sections %}
+                  <option value="{{ sec.offered_id }}">
+                    {{ sec.teacher_name }} · {{ sec.time_slot }} · {{ sec.classroom }}
+                  </option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn-select">Enroll</button>
+            </form>
+          {% else %}
+            {% if gc.would_exceed_limit %}
+              <span class="restriction-note text-danger">Would exceed credit limit ({{ total_credits + gc.credits }} > 18)</span>
+            {% elif gc.target_grade != student_grade %}
+              <span class="restriction-note">For Grade {{ gc.target_grade }} only</span>
+            {% else %}
+              <span class="restriction-note text-danger">All sections are full</span>
+            {% endif %}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="empty-state">No available courses from your college this semester.</div>
+{% endif %}
+
+<!-- ============ 其他学院课程============ -->
+<h3 class="section-title">🌍 Courses from Other Colleges (Reference Only – Not Selectable)</h3>
+
+{% if other_colleges %}
+<div style="margin: 16px 0 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+  <label for="collegeFilter" style="font-weight: 600; color: #1a237e; white-space: nowrap;">Filter by College:</label>
+  <select id="collegeFilter" style="
+    padding: 8px 14px;
+    border: 1px solid #c5cae9;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #f5f7ff;
+    min-width: 160px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+  ">
+    <option value="">All Colleges</option>
+    {% for cname in other_colleges %}
+      <option value="{{ cname }}">{{ cname }}</option>
+    {% endfor %}
+  </select>
+</div>
+{% endif %}
+
+<div id="otherCollegeCourses">
+  {% if other_college_courses %}
+    {% for gc in other_college_courses %}
+    <div class="other-course-item" data-college="{{ gc.college_name }}" style="
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+      border-left: 4px solid #90a4ae;
+      transition: box-shadow 0.2s;
+    " onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.08)'"
+       onmouseout="this.style.boxShadow='0 3px 12px rgba(0,0,0,0.05)'">
+
+      <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+        <h5 style="margin: 0; color: #1a237e; font-size: 18px; font-weight: 600;">
+          {{ gc.course_name }}
+        </h5>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <span style="background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 600;">
+            {{ gc.credits }} Credits
+          </span>
+          <span style="background: #e3f2fd; color: #1565c0; padding: 4px 10px; border-radius: 20px; font-size: 13px;">
+            Grade {{ gc.target_grade }}
+          </span>
+        </div>
+      </div>
+
+      <div style="color: #546e7a; font-size: 14px; margin-bottom: 12px;">
+        <strong>Offering College:</strong> {{ gc.college_name }}
+      </div>
+
+      <div style="margin-top: 16px;">
+        <div style="font-weight: 600; color: #455a64; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+          <span>📚 Section Information</span>
+          <span style="font-weight: normal; color: #78909c; font-size: 13px;">(Instructor / Time / Classroom / Enrollment)</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          {% for sec in gc.sections %}
+          <div style="
+            padding: 12px;
+            background: #fafcff;
+            border-radius: 8px;
+            border: 1px solid #eef2ff;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 14px;
+            color: #37474f;
+          ">
+            <div><strong>{{ sec.teacher_name }}</strong></div>
+            <div style="color: #546e7a; margin: 4px 0;">{{ sec.time_slot }} · {{ sec.classroom }}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+              <span style="color: #607d8b; font-size: 13px;">
+                {{ sec.current_count }} / {{ sec.capacity }}
+              </span>
+              <span style="
+                background: #f1f8e9;
+                color: #558b2f;
+                padding: 2px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+              ">Non-Home College Course</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">No course data available from other colleges this semester.</div>
+  {% endif %}
+</div>
+
+<script>
+document.getElementById('collegeFilter')?.addEventListener('change', function() {
+  const selected = this.value;
+  document.querySelectorAll('.other-course-item').forEach(item => {
+    item.style.display = (!selected || item.dataset.college === selected) ? 'block' : 'none';
+  });
+});
+</script>
+
+<div style="margin-top:28px; padding:20px; background:#f1f8e9; border-left:4px solid #4caf50; border-radius:0 8px 8px 0; font-size:14px; color:#2e7d32;">
+    <strong>📌 Notes:</strong>
+    <ul style="margin-top:10px; padding-left:20px; line-height:1.6;">
+        <li>Total enrolled credits per semester must be between <strong>10–15 credits</strong></li>
+        <li>Only one section can be selected per course</li>
+        <li>Only current semester courses are displayed</li>
+        <li>The page refreshes automatically after enrollment/dropping</li>
+        <li>Grades will be entered by instructors after the semester ends</li>
+        <li><strong>Only courses offered by your own college are selectable</strong>; courses from other colleges are for reference only</li>
+    </ul>
+</div>
+
+<!-- 返回顶部按钮 -->
+<div id="backToTopBtn" style="
+    position: fixed;
+    bottom: 50px;
+    right: 5px;
+    width: 45px;
+    height: 45px;
+    background: #1976d2;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    z-index: 10000;
+    pointer-events: auto;
+">
+    <i class="material-icons" style="font-size: 24px;">arrow_upward</i>
+</div>
+
+<style>
+#backToTopBtn:hover {
+    background: #0d47a1;
+    transform: translateY(0);
+    box-shadow: 0 6px 16px rgba(25, 118, 210, 0.4);
+}
+#backToTopBtn.visible {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('backToTopBtn');
+    if (!btn) return;
+
+    const toggleVisibility = () => {
+        if (window.scrollY > 400) {
+            btn.classList.add('visible');
+        } else {
+            btn.classList.remove('visible');
+        }
+    };
+
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+
+    window.addEventListener('scroll', toggleVisibility);
+    btn.addEventListener('click', scrollToTop);
+
+    // 初始状态
+    toggleVisibility();
+});
+</script>
+
+{% endblock %}

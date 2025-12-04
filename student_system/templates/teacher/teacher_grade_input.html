@@ -1,0 +1,406 @@
+{% extends "teacher/teacher_base.html" %}
+{% block title %}Grade Entry - {{ course.course_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header .header-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .page-header h2 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.5rem;
+    }
+
+    .course-info {
+        color: #555;
+        margin-bottom: 24px;
+        font-size: 16px;
+    }
+
+    .ratio-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        margin-bottom: 28px;
+    }
+
+    .ratio-card h4 {
+        margin-top: 0px;
+        margin-bottom: 10px;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.125rem;
+    }
+
+    .ratio-group {
+        display: flex;
+        align-items: flex-start;
+        gap: 32px;
+        flex-wrap: wrap;
+    }
+
+    .ratio-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .ratio-item label {
+        font-size: 14px;
+        color: #555;
+    }
+
+    .input-with-unit {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .ratio-input {
+        width: 80px;
+        padding: 8px 10px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        text-align: right;
+        font-size: 15px;
+        transition: border-color 0.2s;
+    }
+
+    .ratio-input:focus {
+        outline: none;
+        border-color: #7b1fa2;
+        box-shadow: 0 0 0 2px rgba(123, 31, 162, 0.2);
+    }
+
+    .ratio-input:read-only {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .ratio-percent {
+        color: #666;
+        font-size: 16px;
+        line-height: 1;
+    }
+
+    .grade-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        margin-bottom: 24px;
+    }
+
+    .grade-table th {
+        background: #f8f9fa;
+        padding: 14px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #2c3e50;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .grade-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #eee;
+        color: #424242;
+    }
+
+    .grade-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .score-input {
+        width: 80px;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 15px;
+        transition: border-color 0.2s;
+    }
+
+    .score-input:focus {
+        outline: none;
+        border-color: #7b1fa2;
+        box-shadow: 0 0 0 2px rgba(123, 31, 162, 0.2);
+    }
+
+    .total-score {
+        font-weight: 600;
+        color: #2e7d32;
+    }
+
+    .pending {
+        color: #999;
+        font-style: italic;
+    }
+
+    .save-btn {
+        background: #7b1fa2;
+        color: white;
+        padding: 10px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .save-btn:hover {
+        background: #6a1b9a;
+    }
+
+    .reset-btn {
+        background: none;
+        border: none;
+        color: #d32f2f;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0;
+        text-decoration: underline;
+        transition: color 0.2s;
+        font-weight: 500;
+    }
+
+    .reset-btn:hover {
+        color: #b71c1c;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 32px 24px;
+        color: #757575;
+        background: #fafafa;
+        border-radius: 12px;
+        margin: 20px 0;
+        border: 1px dashed #e0e0e0;
+        font-style: normal;
+        font-size: 16px;
+    }
+
+    .empty-state i.material-icons {
+        font-size: 48px;
+        color: #bdbdbd;
+        margin-bottom: 12px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 16px;
+        color: #7b1fa2;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: #4a148c;
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <i class="material-icons">edit</i>
+        <h2>Grade Entry - {{ course.course_name }}</h2>
+    </div>
+</div>
+
+<p class="course-info"><strong>Semester:</strong> {{ course.semester_name }}</p>
+
+<!-- 比例设置区域 -->
+<div class="ratio-card">
+    <h4><i class="material-icons" style="font-size:20px;">tune</i> Grade Weighting</h4>
+    <form id="ratioForm">
+        <div class="ratio-group">
+            <div class="ratio-item">
+                <label for="regular_ratio">Regular Score Weight</label>
+                <div class="input-with-unit">
+                    <input type="number" id="regular_ratio" name="regular_ratio"
+                           value="{{ regular_ratio or 40 }}" min="0" max="100" step="5"
+                           class="ratio-input" onchange="updateRatios()">
+                    <span class="ratio-percent">%</span>
+                </div>
+            </div>
+            <div class="ratio-item">
+                <label for="exam_ratio">Exam Score Weight</label>
+                <div class="input-with-unit">
+                    <input type="number" id="exam_ratio" name="exam_ratio"
+                           value="{{ exam_ratio or 60 }}" min="0" max="100" step="5"
+                           class="ratio-input" readonly>
+                    <span class="ratio-percent">%</span>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<form method="POST">
+    <!-- 隐藏字段用于提交比例 -->
+    <input type="hidden" name="regular_ratio" id="hidden_regular_ratio" value="{{ regular_ratio or 40 }}">
+    <input type="hidden" name="exam_ratio" id="hidden_exam_ratio" value="{{ exam_ratio or 60 }}">
+
+    {% if students %}
+    <table class="grade-table">
+        <thead>
+            <tr>
+                <th>Student ID</th>
+                <th>Name</th>
+                <th>College</th>
+                <th>Regular Score</th>
+                <th>Exam Score</th>
+                <th>Total Score</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.student_id }}</td>
+                <td>{{ student.name }}</td>
+                <td>{{ student.college_name or '—' }}</td>
+                <td>
+                    <input type="number" name="regular_{{ student.enrollment_id }}"
+                           value="{{ student.regular_score or '' }}" min="0" max="100" step="1"
+                           class="score-input" onchange="calculateTotal({{ student.enrollment_id }})">
+                </td>
+                <td>
+                    <input type="number" name="exam_{{ student.enrollment_id }}"
+                           value="{{ student.exam_score or '' }}" min="0" max="100" step="1"
+                           class="score-input" onchange="calculateTotal({{ student.enrollment_id }})">
+                </td>
+                <td>
+                    <span id="total_{{ student.enrollment_id }}" class="
+                        {% if student.total_score %}total-score{% else %}pending{% endif %}">
+                        {{ student.total_score or 'Pending Entry' }}
+                    </span>
+                </td>
+                <td>
+                    <button type="button" class="reset-btn"
+                            onclick="resetGrade({{ student.enrollment_id }}, {{ course.offered_id }}, '{{ student.name|e }}')">
+                        Reset Grades
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="submit" class="save-btn">
+        <i class="material-icons" style="font-size:18px; vertical-align: middle; margin-right: 6px;">save</i>
+        Save All Grades
+    </button>
+    {% else %}
+    <div class="empty-state">
+        <i class="material-icons">people_alt</i>
+        <div>No students enrolled. Cannot enter grades.</div>
+    </div>
+    {% endif %}
+</form>
+
+<a href="{{ url_for('main.dashboard') }}" class="back-link">
+    <i class="material-icons" style="font-size:18px;">arrow_back</i>
+    Back to Instructor Dashboard
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateRatios() {
+        let regularRatio = parseInt(document.getElementById('regular_ratio').value) || 0;
+        if (regularRatio < 0) regularRatio = 0;
+        if (regularRatio > 100) regularRatio = 100;
+        const examRatio = 100 - regularRatio;
+
+        document.getElementById('exam_ratio').value = examRatio;
+        document.getElementById('hidden_regular_ratio').value = regularRatio;
+        document.getElementById('hidden_exam_ratio').value = examRatio;
+
+        calculateAll();
+    }
+
+    function calculateTotal(enrollmentId) {
+        const regularInput = document.querySelector(`input[name="regular_${enrollmentId}"]`);
+        const examInput = document.querySelector(`input[name="exam_${enrollmentId}"]`);
+        const regularScore = regularInput.value ? parseFloat(regularInput.value) : null;
+        const examScore = examInput.value ? parseFloat(examInput.value) : null;
+
+        const regularRatio = parseInt(document.getElementById('regular_ratio').value) || 40;
+        const examRatio = 100 - regularRatio;
+
+        const totalElement = document.getElementById(`total_${enrollmentId}`);
+
+        if (regularScore !== null && examScore !== null && !isNaN(regularScore) && !isNaN(examScore)) {
+            const total = Math.round(
+                regularScore * (regularRatio / 100) +
+                examScore * (examRatio / 100)
+            );
+            totalElement.textContent = total;
+            totalElement.className = 'total-score';
+        } else {
+            totalElement.textContent = 'Pending Entry';
+            totalElement.className = 'pending';
+        }
+    }
+
+    function calculateAll() {
+        {% for student in students %}
+        calculateTotal({{ student.enrollment_id }});
+        {% endfor %}
+    }
+
+    function resetGrade(enrollmentId, offeredId, studentName) {
+        if (!confirm(`Are you sure you want to clear all grades for ${studentName}? This action cannot be undone!`)) {
+            return;
+        }
+
+        const formData = new URLSearchParams();
+        formData.append('enrollment_id', enrollmentId);
+        formData.append('offered_id', offeredId);
+
+        fetch("{{ url_for('teacher.reset_grade') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                alert('❌ Failed to reset. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Reset error:', error);
+            alert('⚠️ Network error. Please check the console.');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateRatios();
+    });
+</script>
+{% endblock %}

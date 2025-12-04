@@ -1,0 +1,705 @@
+<!-- templates/admin/admin_messages.html -->
+{% extends "admin/admin_base.html" %}
+
+{% block title %}School Inbox - Admin System{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 修复工作区布局 */
+.inbox-page {
+  padding: 0;
+  max-width: none;
+  margin: 0;
+  width: 100%;
+}
+
+/* 新的标题布局 */
+.inbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 24px 0;
+  padding: 0 0 16px 0;
+  border-bottom: 1px solid #e8eaed;
+}
+
+.inbox-header .title-section h2 {
+  font-weight: 700;
+  margin: 0;
+  color: #1a237e;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.inbox-header .stats-section {
+  color: #5f6368;
+  font-size: 14px;
+  text-align: right;
+}
+
+.inbox-summary {
+  color: #5f6368;
+  margin-bottom: 32px;
+  font-size: 16px;
+}
+
+/* Thread Cards - 调整宽度 */
+.inbox-page .thread-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+  border: 1px solid #e8eaed;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  max-width: none;
+}
+
+.inbox-page .thread-card:hover {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+  border-color: #dadce0;
+}
+
+.inbox-page .thread-card.unread {
+  border-left: 4px solid #1a73e8;
+  background: linear-gradient(90deg, #f8fbff 0%, #ffffff 3%);
+}
+
+/* Thread Summary */
+.inbox-page .thread-summary {
+  padding: 20px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 15px;
+  color: #202124;
+  position: relative;
+}
+
+.inbox-page .thread-status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #1a73e8;
+  flex-shrink: 0;
+}
+
+.inbox-page .thread-status-indicator.closed {
+  background: #34a853;
+}
+
+.inbox-page .thread-status-indicator.pending {
+  background: #f9ab00;
+}
+
+.inbox-page .thread-title {
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  color: #1a237e;
+  min-width: 0;
+}
+
+.inbox-page .thread-meta {
+  color: #5f6368;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.inbox-page .student-badge {
+  background: #e8f0fe;
+  color: #1a73e8;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.inbox-page .expand-icon {
+  color: #5f6368;
+  transition: transform 0.3s ease;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.inbox-page .thread-summary.active .expand-icon {
+  transform: rotate(180deg);
+}
+
+/* Thread Details */
+.inbox-page .thread-details {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 24px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #f8f9fa;
+  margin: 0;
+  border-top: 1px solid #e8eaed;
+}
+
+.inbox-page .thread-details.expanded {
+  opacity: 1;
+  max-height: 2000px;
+  padding: 24px;
+  overflow: visible;
+}
+
+/* Message Content */
+.inbox-page .main-content {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e8eaed;
+  color: #202124;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+  white-space: pre-wrap;
+  font-size: 14px;
+  width: 100%;
+}
+
+.inbox-page .message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+  height: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.inbox-page .message-sender {
+  font-weight: 600;
+  color: #1a237e;
+  font-size: 15px;
+  margin-bottom: 40px;
+}
+
+.inbox-page .message-time {
+  color: #5f6368;
+  font-size: 13px;
+}
+
+/* 消息气泡容器 */
+.inbox-page .messages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 24px 0;
+  width: 100%;
+}
+
+.inbox-page .conversation-header {
+  color: #5f6368;
+  font-size: 14px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Reply Items */
+.inbox-page .reply-item {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.inbox-page .reply-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.inbox-page .reply-student .reply-avatar {
+  background: #e8f0fe;
+  color: #1a73e8;
+  border: 2px solid #d2e3fc;
+}
+
+.inbox-page .reply-admin .reply-avatar {
+  background: #e6f4ea;
+  color: #137333;
+  border: 2px solid #ceead6;
+}
+
+.inbox-page .reply-bubble {
+  flex: 1;
+  padding: 12px 20px;
+  background: white;
+  border-radius: 18px;
+  border: 1px solid #e8eaed;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  min-width: 0;
+  max-width: calc(100% - 60px);
+}
+
+.inbox-page .reply-student .reply-bubble {
+  background: #f0f6ff;
+  border-color: #d2e3fc;
+  border-radius: 18px 18px 18px 4px;
+  padding: 16px 20px;
+}
+
+.inbox-page .reply-admin .reply-bubble {
+  background: #f0f8f0;
+  border-color: #ceead6;
+  border-radius: 18px 18px 4px 18px;
+  margin-left: 20px;
+}
+
+.inbox-page .reply-meta {
+  font-size: 12px;
+  color: #5f6368;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inbox-page .reply-sender {
+  font-weight: 600;
+  color: #1a237e;
+}
+
+.inbox-page .reply-time {
+  color: #9aa0a6;
+}
+
+.inbox-page .reply-content {
+  color: #202124;
+  line-height: 1.5;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* 修复：Reply Form - 确保按钮不被覆盖 */
+.inbox-page .admin-reply-form {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e8eaed;
+  margin-top: 24px;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.inbox-page .admin-reply-form textarea {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid #e8eaed;
+  border-radius: 8px;
+  resize: vertical;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+  min-height: 100px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  box-sizing: border-box;
+}
+
+.inbox-page .admin-reply-form textarea:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+/* 修复：确保发送按钮可见且不被覆盖 */
+.inbox-page .admin-reply-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  position: relative;
+  z-index: 10;
+}
+
+.inbox-page .admin-reply-form button[type="submit"] {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 20;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.inbox-page .admin-reply-form button[type="submit"]:hover {
+  background: #1669d6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+.inbox-page .admin-reply-form button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+/* Pagination */
+.inbox-page .pagination {
+  text-align: center;
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.inbox-page .pagination a,
+.inbox-page .pagination span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  margin: 0 2px;
+  text-decoration: none;
+  color: #1a73e8;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  font-size: 14px;
+  min-width: 40px;
+  transition: all 0.3s ease;
+}
+
+.inbox-page .pagination a:hover {
+  background: #f8f9fa;
+  border-color: #1a73e8;
+}
+
+.inbox-page .pagination .active {
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+}
+
+/* Empty State */
+.inbox-page .empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #5f6368;
+  width: 100%;
+}
+
+.inbox-page .empty-state .material-icons {
+  font-size: 72px;
+  color: #dadce0;
+  margin-bottom: 20px;
+}
+
+.inbox-page .empty-state h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #3c4043;
+  margin-bottom: 12px;
+}
+
+.inbox-page .empty-state p {
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* 确保内容区域充分利用空间 */
+.content {
+  padding: 24px;
+  flex: 1;
+  width: 100%;
+  max-width: none;
+}
+
+/* 主容器调整 */
+.main-container {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .inbox-page .thread-summary {
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .inbox-page .thread-title {
+    white-space: normal;
+    max-width: 100%;
+  }
+
+  .inbox-page .thread-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .inbox-page .reply-item {
+    flex-direction: column;
+  }
+
+  .inbox-page .reply-admin .reply-bubble {
+    margin-left: 0;
+  }
+
+  .inbox-page .reply-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .inbox-page .admin-reply-form {
+    padding: 16px;
+  }
+
+  .inbox-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .inbox-header .stats-section {
+    text-align: left;
+  }
+}
+
+/* 超大屏幕优化 */
+@media (min-width: 1400px) {
+  .inbox-page .thread-card {
+    max-width: none;
+  }
+
+  .content {
+    padding: 32px;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inbox-page">
+  <!-- 新的标题布局 -->
+  <div class="inbox-header">
+    <div class="title-section">
+      <h2>
+        <span style="font-size: 32px;">📬</span>
+        School Inbox
+      </h2>
+    </div>
+    <div class="stats-section">
+      <strong>{{ threads|length }}</strong> conversation(s)<br>
+      Manage student communications
+    </div>
+  </div>
+
+  {% if threads %}
+    <div class="messages-container">
+      {% for thread in threads %}
+        {% set is_unread = thread.main.status == 'unread' %}
+        <div class="thread-card {% if is_unread %}unread{% endif %}">
+          <div class="thread-summary" data-target="details-{{ thread.main.message_id }}">
+            <div class="thread-status-indicator {% if thread.main.status == 'closed' %}closed{% elif thread.main.status == 'pending' %}pending{% endif %}"></div>
+
+            <div class="thread-title">
+              {{ thread.main.title }}
+              {% if is_unread %}
+                <span style="background: #fbbc04; color: white; padding: 2px 6px; border-radius: 8px; font-size: 11px; margin-left: 8px;">NEW</span>
+              {% endif %}
+            </div>
+
+            <div class="thread-meta">
+              <span class="student-badge">{{ thread.main.student_name }}</span>
+              <span>{{ thread.main.created_at }}</span>
+              {% if thread.replies %}
+                <span>{{ thread.replies|length }} repl{{ 'y' if thread.replies|length == 1 else 'ies' }}</span>
+              {% endif %}
+            </div>
+
+            <span class="expand-icon material-icons">expand_more</span>
+          </div>
+
+          <div class="thread-details" id="details-{{ thread.main.message_id }}">
+            <!-- Original Message -->
+            <div class="main-content">
+              <div class="message-header">
+                <span class="message-sender">{{ thread.main.student_name }} (Student)</span>
+                <span class="message-time">{{ thread.main.created_at }}</span>
+              </div>
+              <div class="reply-content">{{ thread.main.content | replace('\n', '<br>') | safe }}</div>
+            </div>
+
+            <!-- Replies -->
+            {% if thread.replies %}
+              <div class="messages-container">
+                <div class="conversation-header">Conversation History</div>
+                {% for rep in thread.replies %}
+                  <div class="reply-item {{ 'reply-student' if rep.sender_role == 'student' else 'reply-admin' }}">
+                    <div class="reply-avatar">
+                      {{ rep.sender_name[0]|upper }}
+                    </div>
+                    <div class="reply-bubble">
+                      <div class="reply-meta">
+                        <span class="reply-sender">{{ rep.sender_name }}</span>
+                        <span class="reply-time">{{ rep.created_at }}</span>
+                      </div>
+                      <div class="reply-content">{{ rep.content | replace('\n', '<br>') | safe }}</div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Reply Form -->
+            <div class="admin-reply-form">
+              <form method="POST" action="{{ url_for('admin.reply_to_message', message_id=thread.main.message_id) }}">
+                <textarea name="content" rows="4" maxlength="500"
+                          placeholder="Type your reply here... (max 500 characters)" required></textarea>
+                <div class="form-actions">
+                  <button type="submit">
+                    <span class="material-icons" style="font-size: 18px;">send</span>
+                    Send Reply
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if total_pages > 1 %}
+      <div class="pagination">
+        {% if current_page > 1 %}
+          <a href="{{ url_for('admin.messages', page=current_page-1) }}">
+            <span class="material-icons" style="font-size: 18px;">chevron_left</span>
+            Previous
+          </a>
+        {% else %}
+          <span style="color: #dadce0;">
+            <span class="material-icons" style="font-size: 18px;">chevron_left</span>
+            Previous
+          </span>
+        {% endif %}
+
+        {% for p in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+          {% if p == current_page %}
+            <span class="active">{{ p }}</span>
+          {% else %}
+            <a href="{{ url_for('admin.messages', page=p) }}">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if current_page < total_pages %}
+          <a href="{{ url_for('admin.messages', page=current_page+1) }}">
+            Next
+            <span class="material-icons" style="font-size: 18px;">chevron_right</span>
+          </a>
+        {% else %}
+          <span style="color: #dadce0;">
+            Next
+            <span class="material-icons" style="font-size: 18px;">chevron_right</span>
+          </span>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="empty-state">
+      <span class="material-icons">inbox</span>
+      <h3>No messages yet</h3>
+      <p>Students haven't submitted any messages via the school inbox. All communications will appear here.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.thread-summary').forEach(summary => {
+    summary.addEventListener('click', function() {
+      const targetId = this.dataset.target;
+      const details = document.getElementById(targetId);
+      const isExpanded = details.classList.contains('expanded');
+
+      // Close all other threads
+      document.querySelectorAll('.thread-details').forEach(el => {
+        if (el !== details) {
+          el.classList.remove('expanded');
+          el.style.maxHeight = '0px';
+        }
+      });
+
+      document.querySelectorAll('.thread-summary').forEach(s => {
+        if (s !== this) {
+          s.classList.remove('active');
+        }
+      });
+
+      // Toggle current thread
+      if (isExpanded) {
+        details.classList.remove('expanded');
+        details.style.maxHeight = '0px';
+        this.classList.remove('active');
+      } else {
+        details.classList.add('expanded');
+        // 设置一个较大的最大高度确保内容完全显示
+        details.style.maxHeight = '2000px';
+        this.classList.add('active');
+
+        // 标记为已读
+        const threadCard = this.closest('.thread-card');
+        if (threadCard.classList.contains('unread')) {
+          threadCard.classList.remove('unread');
+        }
+      }
+    });
+  });
+
+  // Auto-expand if there's only one thread
+  if (document.querySelectorAll('.thread-card').length === 1) {
+    setTimeout(() => {
+      document.querySelector('.thread-summary').click();
+    }, 100);
+  }
+});
+</script>
+{% endblock %}

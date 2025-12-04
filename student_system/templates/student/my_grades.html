@@ -1,0 +1,57 @@
+<!-- templates/student/my_grades.html -->
+{% extends "student/student_base.html" %}
+
+{% block title %}My Grades - Student System{% endblock %}
+
+{% block content %}
+<h2>📚 My Grades</h2>
+
+{% if published %}
+  <h3>✅ Published Grades (Total: {{ published|length }} courses)</h3>
+  <div style="overflow-x: auto; margin-top: 16px;">
+    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+      <thead>
+        <tr style="background: #f3e5f5; text-align: left;">
+          <th style="padding: 12px 16px;">Course Name</th>
+          <th style="padding: 12px 16px;">Instructor</th>
+          <th style="padding: 12px 16px;">Semester</th>
+          <th style="padding: 12px 16px;">Regular Score</th>
+          <th style="padding: 12px 16px;">Exam Score</th>
+          <th style="padding: 12px 16px;">Final Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in published %}
+        <tr style="border-bottom: 1px solid #eee;">
+          <td style="padding: 12px 16px;">{{ g.course_name }}</td>
+          <td style="padding: 12px 16px;">{{ g.teacher_name }}</td>
+          <td style="padding: 12px 16px;">{{ g.semester_name }}</td>
+          <td style="padding: 12px 16px;">{{ "%.2f"|format(g.regular_score) if g.regular_score else '—' }}</td>
+          <td style="padding: 12px 16px;">{{ "%.2f"|format(g.exam_score) if g.exam_score else '—' }}</td>
+          <td style="padding: 12px 16px; font-weight: bold; color: {% if g.total_score >= 60 %}#2e7d32{% else %}#c62828{% endif %};">
+            {{ "%.2f"|format(g.total_score) }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p style="color: #9e9e9e; margin-top: 16px;">No published grades yet.</p>
+{% endif %}
+
+{% if pending %}
+  <h3 style="margin-top: 32px;">⏳ Grades Pending Release (Total: {{ pending|length }} courses)</h3>
+  <ul style="list-style: none; padding: 0; margin-top: 12px;">
+    {% for g in pending %}
+    <li style="background: #fff8e1; padding: 12px 16px; margin-bottom: 8px; border-left: 4px solid #ffa000; border-radius: 4px;">
+      <strong>{{ g.course_name }}</strong> — Instructor: {{ g.teacher_name }} ({{ g.semester_name }})
+    </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% if not published and not pending %}
+  <p style="color: #757575; margin-top: 24px;">You haven't enrolled in any courses or have no grade records yet.</p>
+{% endif %}
+{% endblock %}

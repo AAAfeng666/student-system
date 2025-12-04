@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}注册账号{% endblock %}
+
+{% block content %}
+<style>
+    .register-container {
+        max-width: 480px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    .register-container h2 {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: #2c3e50;
+        font-size: 28px;
+        font-weight: 600;
+    }
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #34495e;
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    .role-options {
+        display: flex;
+        gap: 24px;
+        margin-top: 6px;
+    }
+    .role-option label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 500;
+        color: #2c3e50;
+        gap: 8px;
+    }
+    .role-option input[type="radio"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    .btn-submit {
+        width: 100%;
+        padding: 12px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-submit:hover {
+        background: #2980b9;
+    }
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 1rem;
+        color: #7f8c8d;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .back-link:hover {
+        color: #3498db;
+        text-decoration: underline;
+    }
+</style>
+
+<div class="register-container">
+    <h2>📝 注册账号</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required>
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required>
+        </div>
+        <div class="form-group">
+            <label>身份选择</label>
+            <div class="role-options">
+                <div class="role-option">
+                    <label>
+                        <input type="radio" name="role" value="student" checked> 学生
+                    </label>
+                </div>
+                <div class="role-option">
+                    <label>
+                        <input type="radio" name="role" value="teacher"> 教师
+                    </label>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn-submit">立即注册</button>
+    </form>
+    <a href="{{ url_for('login') }}" class="back-link">← 已有账号？立即登录</a>
+</div>
+
+{% endblock %}

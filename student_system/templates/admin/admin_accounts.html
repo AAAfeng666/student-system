@@ -1,0 +1,543 @@
+{% extends "admin/admin_base.html" %}
+{% block title %}Account Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>
+    <i class="material-icons">lock</i> Account Management
+  </h2>
+  <a href="{{ url_for('admin.add_account') }}" class="btn btn-primary">
+    <i class="material-icons">person_add</i> Add Account
+  </a>
+</div>
+
+<a href="{{ url_for('main.dashboard') }}" class="back-link">
+  <i class="material-icons">arrow_back</i>  Back to Dashboard
+</a>
+
+<!-- ========== 搜索框 + 清除按钮 ========== -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0; flex-wrap: wrap; gap: 16px;">
+  <form id="searchForm" method="GET" style="display: flex; gap: 8px; flex: 1; max-width: 500px;">
+    <div style="position: relative; flex: 1;">
+      <input
+        type="text"
+        name="q"
+        id="searchInput"
+        placeholder="🔍 Search by username or real name..."
+        value="{{ current_query or '' }}"
+        style="
+          width: 100%;
+          padding: 10px 40px 10px 16px;
+          border: 1px solid #ddd;
+          border-radius: 12px;
+          font-size: 15px;
+          outline: none;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+          transition: border-color 0.2s;
+        "
+      >
+      {% if current_query %}
+      <button type="button" id="clearSearch" style="
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 2px;
+      ">×</button>
+      {% endif %}
+    </div>
+    <button type="submit" style="
+      padding: 10px 20px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(25,118,210,0.3);
+      transition: all 0.2s;
+    " onmouseover="this.style.backgroundColor='#1565c0'"
+       onmouseout="this.style.backgroundColor='#1976d2'">
+      Search
+    </button>
+  </form>
+
+  <!-- 页码跳转 -->
+  {% if total_pages > 1 %}
+  <div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+    <span style="color: #555; font-size: 14px;">Go to page</span>
+    <form method="GET" style="display: inline;" onsubmit="return validatePageInput(this);">
+      {% if current_query %}
+      <input type="hidden" name="q" value="{{ current_query }}">
+      {% endif %}
+      <input
+        type="number"
+        name="page"
+        min="1"
+        max="{{ total_pages }}"
+        value="{{ current_page }}"
+        style="
+          width: 70px;
+          padding: 6px 10px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          text-align: center;
+          font-size: 14px;
+        "
+        required
+      >
+      <button type="submit" style="
+        margin-left: 6px;
+        padding: 6px 12px;
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+      ">Go</button>
+    </form>
+    <span style="color: #555; font-size: 14px;">(of {{ total_pages }} pages)</span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- 账号列表 -->
+{% if accounts %}
+<div class="table-container">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Role</th>
+        <th>ID</th>
+        <th>Real Name</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for acc in accounts %}
+      <tr>
+        <td>{{ acc.username }}</td>
+        <td>
+          {% if acc.role == 'student' %}
+            <span class="role-badge role-student">Student</span>
+          {% elif acc.role == 'teacher' %}
+            <span class="role-badge role-teacher">Teacher</span>
+          {% else %}
+            <span class="role-badge role-admin">Admin</span>
+          {% endif %}
+        </td>
+        <td>{{ acc.user_id or '—' }}</td>
+        <td>{{ acc.real_name or '—' }}</td>
+        <td>
+          {% if acc.is_active %}
+            <span class="status-badge status-active">Active</span>
+          {% else %}
+            <span class="status-badge status-disabled">Disabled</span>
+          {% endif %}
+        </td>
+        <td>
+          <!-- 重置密码 -->
+          <form method="POST" action="{{ url_for('admin.reset_password') }}" style="display:inline;" class="action-form">
+            <input type="hidden" name="username" value="{{ acc.username }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="button" class="btn-action btn-reset"
+                    data-confirm-message="Are you sure you want to reset the password for account <code>{{ acc.username }}</code>?<br>The new password will be set to: <code>123456</code>"
+                    onclick="showCustomConfirm(this.getAttribute('data-confirm-message'), this.closest('form'));">
+              <i class="material-icons">lock_reset</i> Reset Password
+            </button>
+          </form>
+
+          <!-- 启用/禁用 -->
+          <form method="POST" action="{{ url_for('admin.toggle_account_status') }}" style="display:inline;" class="action-form">
+            <input type="hidden" name="username" value="{{ acc.username }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if acc.is_active %}
+              <button type="button" class="btn-action btn-disable"
+                      data-confirm-message="Are you sure you want to <strong style='color:#d32f2f'>disable</strong> the account <code>{{ acc.username }}</code>?"
+                      onclick="showCustomConfirm(this.getAttribute('data-confirm-message'), this.closest('form'));">
+                <i class="material-icons">visibility_off</i> Disable
+              </button>
+            {% else %}
+              <button type="button" class="btn-action btn-enable"
+                      data-confirm-message="Are you sure you want to <strong style='color:#2e7d32'>enable</strong> the account <code>{{ acc.username }}</code>?"
+                      onclick="showCustomConfirm(this.getAttribute('data-confirm-message'), this.closest('form'));">
+                <i class="material-icons">visibility</i> Enable
+              </button>
+            {% endif %}
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 分页导航 -->
+{% if total_pages > 1 %}
+<div class="pagination">
+  {% if current_page > 1 %}
+    <a href="{{ url_for('admin.accounts', page=1, q=current_query) }}" class="page-btn">First</a>
+    <a href="{{ url_for('admin.accounts', page=current_page-1, q=current_query) }}" class="page-btn">Previous</a>
+  {% endif %}
+
+  <span class="page-info">
+    Page {{ current_page }} of {{ total_pages }} (Total {{ total }} accounts)
+  </span>
+
+  {% if current_page < total_pages %}
+    <a href="{{ url_for('admin.accounts', page=current_page+1, q=current_query) }}" class="page-btn">Next</a>
+    <a href="{{ url_for('admin.accounts', page=total_pages, q=current_query) }}" class="page-btn">Last</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <p><i class="material-icons">person_off</i> No account data available</p>
+</div>
+{% endif %}
+
+<!-- ========== 自定义确认弹窗 ========== -->
+<div id="customConfirmModal" style="
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+">
+  <div style="
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  ">
+    <h3 style="margin: 0 0 16px; color: #333; font-size: 18px;">Confirm Action</h3>
+    <div id="customConfirmMessage" style="
+      margin-bottom: 20px;
+      line-height: 1.5;
+      color: #555;
+      font-size: 15px;
+    "></div>
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button id="customConfirmCancel" style="
+        padding: 8px 16px;
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #333;
+      ">Cancel</button>
+      <button id="customConfirmSubmit" style="
+        padding: 8px 16px;
+        background: #1976d2;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+      ">Confirm (3s)</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ===== 全局按钮样式 ===== */
+.btn, .btn-primary, .btn-action, .page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  outline: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: white;
+  box-shadow: 0 4px 6px rgba(76,175,80,0.3);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(76,175,80,0.4);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* 操作按钮 */
+.btn-action {
+  padding: 6px 14px;
+  font-size: 13px;
+  margin-right: 8px;
+  margin-top: 4px;
+}
+.btn-reset {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #bbdefb;
+}
+.btn-reset:hover {
+  background-color: #bbdefb;
+}
+.btn-disable {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+.btn-disable:hover {
+  background-color: #ffcdd2;
+}
+.btn-enable {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+.btn-enable:hover {
+  background-color: #c8e6c9;
+}
+
+/* 分页按钮 */
+.page-btn {
+  background-color: #f5f5f5;
+  color: #1976d2;
+  border: 1px solid #ddd;
+  text-decoration: none;
+}
+.page-btn:hover {
+  background-color: #e3f2fd;
+  border-color: #1976d2;
+}
+
+/* 其他样式保持不变... */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.page-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 26px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #1976d2;
+  text-decoration: none;
+  margin-bottom: 20px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 2px;
+}
+.data-table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+}
+.data-table th,
+.data-table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+.data-table th {
+  background-color: #fafafa;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+.data-table tbody tr:hover {
+  background-color: #f9f9f9 !important;
+}
+.role-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.role-student { background-color: #e3f2fd; color: #1565c0; }
+.role-teacher { background-color: #fff8e1; color: #e65100; }
+.role-admin   { background-color: #f3e5f5; color: #6a1b9a; }
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-active   { background-color: #e8f5e9; color: #2e7d32; }
+.status-disabled { background-color: #ffebee; color: #c62828; }
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #777;
+  font-size: 16px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+.empty-state .material-icons {
+  font-size: 32px;
+  margin-bottom: 12px;
+  color: #aaa;
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+  padding: 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.page-info {
+  color: #555;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.material-icons {
+  font-size: 18px;
+  vertical-align: middle;
+  line-height: 1;
+}
+</style>
+
+<script>
+let countdownInterval = null;
+let currentFormToSubmit = null;
+
+function showCustomConfirm(htmlMessage, formElement) {
+  const modal = document.getElementById('customConfirmModal');
+  const messageEl = document.getElementById('customConfirmMessage');
+  const submitBtn = document.getElementById('customConfirmSubmit');
+  const cancelBtn = document.getElementById('customConfirmCancel');
+
+  // 清除之前的倒计时
+  if (countdownInterval) clearInterval(countdownInterval);
+
+  // 设置消息（支持 HTML）
+  messageEl.innerHTML = htmlMessage;
+  currentFormToSubmit = formElement;
+
+  // 初始状态：禁用按钮，显示倒计时
+  let seconds = 3;
+  submitBtn.textContent = `Confirm (${seconds}s)`;
+  submitBtn.disabled = true; // 禁用按钮
+
+  countdownInterval = setInterval(() => {
+    seconds--;
+    if (seconds > 0) {
+      submitBtn.textContent = `Confirm (${seconds}s)`;
+    } else {
+      clearInterval(countdownInterval);
+      submitBtn.textContent = 'Confirm';
+      submitBtn.disabled = false; // 启用按钮
+    }
+  }, 1000);
+
+  // 显示弹窗
+  modal.style.display = 'flex';
+
+  // 取消
+  cancelBtn.onclick = () => {
+    clearInterval(countdownInterval);
+    modal.style.display = 'none';
+    currentFormToSubmit = null;
+  };
+
+  // 手动确认（仅在启用后有效）
+  submitBtn.onclick = () => {
+    if (!submitBtn.disabled) {
+      clearInterval(countdownInterval);
+      modal.style.display = 'none';
+      currentFormToSubmit.submit();
+    }
+  };
+
+  // 点击遮罩关闭
+  modal.onclick = (e) => {
+    if (e.target === modal) {
+      clearInterval(countdownInterval);
+      modal.style.display = 'none';
+      currentFormToSubmit = null;
+    }
+  };
+}
+
+// ========== 清除搜索 ==========
+document.getElementById('clearSearch')?.addEventListener('click', function() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchForm').submit();
+});
+
+// ========== 页面跳转验证 ==========
+function validatePageInput(form) {
+  const input = form.page;
+  const value = parseInt(input.value, 10);
+  const maxPage = {{ total_pages }};
+  if (isNaN(value) || value < 1 || value > maxPage) {
+    alert(`Please enter a valid page number between 1 and ${maxPage}!`);
+    input.focus();
+    return false;
+  }
+  return true;
+}
+
+// ========== 成功提示后自动刷新 ==========
+document.addEventListener('DOMContentLoaded', function() {
+  const flashMessages = document.querySelectorAll('.flash-message');
+  const hasSuccess = Array.from(flashMessages).some(el =>
+    el.textContent.trim().startsWith('✅')
+  );
+
+  if (hasSuccess) {
+    const params = new URLSearchParams(window.location.search);
+    const page = params.get('page') || '1';
+    const q = params.get('q') || '';
+    setTimeout(() => {
+      let url = "{{ url_for('admin.accounts') }}?page=" + page;
+      if (q) url += "&q=" + encodeURIComponent(q);
+      window.location.href = url;
+    }, 3000);
+  }
+});
+</script>
+{% endblock %}
